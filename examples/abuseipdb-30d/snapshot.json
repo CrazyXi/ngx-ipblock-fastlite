@@ -1,0 +1,14 @@
+{
+  "case": "AbuseIPDB s100 30-day IPv4, 2026-09-15 local snapshot",
+  "source": "https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/main/abuseipdb-s100-30d.ipv4",
+  "source_updated_at": "2026-09-15T07:39:37Z",
+  "source_sha256": "66602c7fcd9bd946caab32e1e6d9bf50c815c35e805cea6092ddcad29bb882db",
+  "source_bytes": 8117591,
+  "source_lines": 151266,
+  "unique_ipv4": 151253,
+  "duplicates_removed": 0,
+  "binary_format": "IPBLV001",
+  "binary_bytes": 605076,
+  "binary_sha256": "8eff4d497a78d904f096a1c8112fdf2b1f3b89deb0a3c23fe0419c466e3291b8",
+  "data_sha256": "b3a528413790fccc2887ec5d9fce5bb41a94b85ca0e458aa5a1320d9f83d42e1"
+}

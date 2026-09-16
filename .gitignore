@@ -1,0 +1,16 @@
+/bin/
+/.gocache*/
+/localtest/staging/
+/localtest/
+/dist/
+/client_body_temp/
+/fastcgi_temp/
+/proxy_temp/
+/scgi_temp/
+/uwsgi_temp/
+*.exe
+*.log
+*.pid
+*.bin
+!examples/abuseipdb-30d/snapshot.bin
+*.manifest.json

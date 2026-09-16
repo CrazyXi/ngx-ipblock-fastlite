@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 027
+
+if [[ $# -ne 1 || "$1" == */* || "$1" != *.bin ]]; then
+    echo "usage: rollback-ip-blacklist <version-file.bin>" >&2
+    exit 2
+fi
+CONFIG_FILE="${IPBLACKLIST_CONFIG:-/etc/ipblacklist-update.conf}"
+# shellcheck source=/dev/null
+source "$CONFIG_FILE"
+: "${BUILDER:?}" "${DATA_DIR:?}" "${VERSIONS_DIR:?}" "${CURRENT_BIN:?}" "${CURRENT_MANIFEST:?}"
+: "${LOCK_FILE:?}" "${NGINX_BIN:?}" "${NGINX_CONF:?}" "${PID_FILE:?}"
+MAX_IPS="${MAX_IPS:-2000000}"
+
+data_dir_abs="$(realpath -m -- "$DATA_DIR")"
+versions_dir_abs="$(realpath -m -- "$VERSIONS_DIR")"
+if [[ "$data_dir_abs" == "/" || "$versions_dir_abs" == "/" ]]; then
+    echo "DATA_DIR and VERSIONS_DIR must not be the filesystem root" >&2
+    exit 2
+fi
+if [[ "$(realpath -m -- "$(dirname -- "$CURRENT_BIN")")" != "$data_dir_abs" || \
+      "$(realpath -m -- "$(dirname -- "$CURRENT_MANIFEST")")" != "$data_dir_abs" ]]; then
+    echo "current files must be direct children of DATA_DIR" >&2
+    exit 2
+fi
+
+reload_nginx() {
+    local pid
+    pid="$(tr -d '[:space:]' < "$PID_FILE")"
+    if [[ ! "$pid" =~ ^[0-9]+$ || "$pid" -le 1 ]]; then
+        echo "invalid nginx PID in $PID_FILE" >&2
+        return 1
+    fi
+    kill -HUP "$pid"
+}
+
+mkdir -p -- "$DATA_DIR" "$VERSIONS_DIR" "$(dirname -- "$LOCK_FILE")"
+exec 9>"$LOCK_FILE"
+flock -n 9 || { echo "another update/rollback is already running" >&2; exit 75; }
+
+selected="$VERSIONS_DIR/$1"
+selected_manifest="${selected%.bin}.manifest.json"
+[[ -f "$selected" ]] || { echo "version not found: $selected" >&2; exit 1; }
+"$BUILDER" verify --input "$selected" --max-ips "$MAX_IPS"
+work_dir="$(mktemp -d --tmpdir="$DATA_DIR" .rollback.XXXXXXXX)"
+cleanup() {
+    rm -f -- "$work_dir/selected.bin" "$work_dir/selected.manifest.json" \
+        "$work_dir/current.bin" "$work_dir/current.manifest.json"
+    rmdir -- "$work_dir" 2>/dev/null || true
+}
+trap cleanup EXIT
+cp --preserve=mode,timestamps -- "$selected" "$work_dir/selected.bin"
+if [[ -f "$selected_manifest" ]]; then
+    cp --preserve=mode,timestamps -- "$selected_manifest" "$work_dir/selected.manifest.json"
+fi
+expected_sha="$($BUILDER verify --input "$selected" --max-ips "$MAX_IPS" --field data-sha256)"
+if [[ -f "$CURRENT_BIN" ]]; then
+    cp --preserve=mode,timestamps -- "$CURRENT_BIN" "$work_dir/current.bin"
+fi
+if [[ -f "$CURRENT_MANIFEST" ]]; then
+    cp --preserve=mode,timestamps -- "$CURRENT_MANIFEST" "$work_dir/current.manifest.json"
+fi
+
+restore_original() {
+    echo "activation failed; restoring the version active at script start" >&2
+    if [[ -f "$work_dir/current.bin" ]]; then
+        mv -f -- "$work_dir/current.bin" "$CURRENT_BIN"
+        if [[ -f "$work_dir/current.manifest.json" ]]; then
+            mv -f -- "$work_dir/current.manifest.json" "$CURRENT_MANIFEST"
+        else
+            rm -f -- "$CURRENT_MANIFEST"
+        fi
+        "$NGINX_BIN" -t -c "$NGINX_CONF" && reload_nginx || true
+    else
+        rm -f -- "$CURRENT_BIN" "$CURRENT_MANIFEST"
+    fi
+}
+
+mv -f -- "$work_dir/selected.bin" "$CURRENT_BIN"
+if [[ -f "$work_dir/selected.manifest.json" ]]; then
+    mv -f -- "$work_dir/selected.manifest.json" "$CURRENT_MANIFEST"
+else
+    rm -f -- "$CURRENT_MANIFEST"
+fi
+if ! "$NGINX_BIN" -t -c "$NGINX_CONF" || ! reload_nginx; then
+    restore_original
+    exit 1
+fi
+if [[ -n "${HEALTH_URL:-}" ]]; then
+    health_ok=false
+    for ((attempt = 1; attempt <= ${HEALTH_RETRIES:-10}; attempt++)); do
+        if curl --fail --silent --show-error --max-time 5 \
+            -H "Host: ${HEALTH_HOST:?HEALTH_HOST is required when HEALTH_URL is set}" \
+            "$HEALTH_URL" | grep -Fq -- "$expected_sha"; then
+            health_ok=true
+            break
+        fi
+        sleep "${HEALTH_RETRY_DELAY:-1}"
+    done
+    if [[ "$health_ok" != true ]]; then
+        echo "rollback health check did not observe data_sha256=$expected_sha" >&2
+        restore_original
+        exit 1
+    fi
+fi
+echo "rollback activated: $selected"

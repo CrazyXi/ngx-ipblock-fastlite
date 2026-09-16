@@ -1,0 +1,208 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 027
+
+CONFIG_FILE="${IPBLACKLIST_CONFIG:-/etc/ipblacklist-update.conf}"
+if [[ ! -r "$CONFIG_FILE" ]]; then
+    echo "configuration is not readable: $CONFIG_FILE" >&2
+    exit 1
+fi
+# shellcheck source=/dev/null
+source "$CONFIG_FILE"
+
+: "${SOURCE_URL:?SOURCE_URL is required}"
+: "${BUILDER:?BUILDER is required}"
+: "${DATA_DIR:?DATA_DIR is required}"
+: "${VERSIONS_DIR:?VERSIONS_DIR is required}"
+: "${CURRENT_BIN:?CURRENT_BIN is required}"
+: "${CURRENT_MANIFEST:?CURRENT_MANIFEST is required}"
+: "${LOCK_FILE:?LOCK_FILE is required}"
+: "${LOG_FILE:?LOG_FILE is required}"
+: "${NGINX_BIN:?NGINX_BIN is required}"
+: "${NGINX_CONF:?NGINX_CONF is required}"
+: "${PID_FILE:?PID_FILE is required}"
+
+MAX_INPUT_BYTES="${MAX_INPUT_BYTES:-104857600}"
+MAX_IPS="${MAX_IPS:-2000000}"
+DOWNLOAD_TIMEOUT="${DOWNLOAD_TIMEOUT:-30s}"
+DOWNLOAD_RETRIES="${DOWNLOAD_RETRIES:-2}"
+MAX_INCREASE_PERCENT="${MAX_INCREASE_PERCENT:-50}"
+MAX_DECREASE_PERCENT="${MAX_DECREASE_PERCENT:-50}"
+KEEP_VERSIONS="${KEEP_VERSIONS:-7}"
+HEALTH_RETRIES="${HEALTH_RETRIES:-10}"
+HEALTH_RETRY_DELAY="${HEALTH_RETRY_DELAY:-1}"
+
+data_dir_abs="$(realpath -m -- "$DATA_DIR")"
+versions_dir_abs="$(realpath -m -- "$VERSIONS_DIR")"
+current_bin_dir_abs="$(realpath -m -- "$(dirname -- "$CURRENT_BIN")")"
+current_manifest_dir_abs="$(realpath -m -- "$(dirname -- "$CURRENT_MANIFEST")")"
+if [[ "$data_dir_abs" == "/" || "$versions_dir_abs" == "/" ]]; then
+    echo "DATA_DIR and VERSIONS_DIR must not be the filesystem root" >&2
+    exit 2
+fi
+if [[ "$current_bin_dir_abs" != "$data_dir_abs" || "$current_manifest_dir_abs" != "$data_dir_abs" ]]; then
+    echo "CURRENT_BIN and CURRENT_MANIFEST must be direct children of DATA_DIR for atomic publication" >&2
+    exit 2
+fi
+
+reload_nginx() {
+    local pid
+    pid="$(tr -d '[:space:]' < "$PID_FILE")"
+    if [[ ! "$pid" =~ ^[0-9]+$ || "$pid" -le 1 ]]; then
+        echo "invalid nginx PID in $PID_FILE" >&2
+        return 1
+    fi
+    kill -HUP "$pid"
+}
+
+mkdir -p -- "$DATA_DIR" "$VERSIONS_DIR" "$(dirname -- "$LOCK_FILE")" "$(dirname -- "$LOG_FILE")"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+    echo "another update is already running" >&2
+    exit 75
+fi
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+echo "[$started_at] update start source=$SOURCE_URL"
+stage="initialization"
+report_error() {
+    local rc=$?
+    echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] update failed stage=$stage exit=$rc" >&2
+}
+trap report_error ERR
+
+work_dir="$(mktemp -d --tmpdir="$DATA_DIR" .update.XXXXXXXX)"
+candidate_bin="$work_dir/candidate.bin"
+candidate_manifest="$work_dir/candidate.manifest.json"
+previous_exists=false
+backup_bin=""
+backup_manifest=""
+restore_bin=""
+restore_manifest=""
+
+cleanup() {
+    rm -f -- "$candidate_bin" "$candidate_manifest"
+    [[ -z "$restore_bin" ]] || rm -f -- "$restore_bin"
+    [[ -z "$restore_manifest" ]] || rm -f -- "$restore_manifest"
+    rmdir -- "$work_dir" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+build_args=(
+    build --url "$SOURCE_URL" --output "$candidate_bin" --manifest "$candidate_manifest"
+    --max-input-bytes "$MAX_INPUT_BYTES" --max-ips "$MAX_IPS"
+    --timeout "$DOWNLOAD_TIMEOUT" --retries "$DOWNLOAD_RETRIES"
+)
+stage="build-and-verify"
+if [[ -f "$CURRENT_BIN" ]]; then
+    "$BUILDER" verify --input "$CURRENT_BIN" --max-ips "$MAX_IPS"
+    build_args+=(
+        --previous "$CURRENT_BIN"
+        --max-increase-percent "$MAX_INCREASE_PERCENT"
+        --max-decrease-percent "$MAX_DECREASE_PERCENT"
+    )
+fi
+"$BUILDER" "${build_args[@]}"
+"$BUILDER" verify --input "$candidate_bin" --max-ips "$MAX_IPS"
+new_sha="$($BUILDER verify --input "$candidate_bin" --max-ips "$MAX_IPS" --field data-sha256)"
+new_count="$($BUILDER verify --input "$candidate_bin" --max-ips "$MAX_IPS" --field count)"
+if [[ ! "$new_count" =~ ^[0-9]+$ || "$new_count" -le 0 ]]; then
+    echo "refusing to publish an empty or invalid candidate list: count=$new_count" >&2
+    exit 1
+fi
+
+stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+stage="backup"
+if [[ -f "$CURRENT_BIN" ]]; then
+    previous_exists=true
+    old_sha="$($BUILDER verify --input "$CURRENT_BIN" --max-ips "$MAX_IPS" --field data-sha256)"
+    old_count="$($BUILDER verify --input "$CURRENT_BIN" --max-ips "$MAX_IPS" --field count)"
+    backup_bin="$VERSIONS_DIR/${stamp}-${old_sha}.bin"
+    backup_manifest="$VERSIONS_DIR/${stamp}-${old_sha}.manifest.json"
+    if [[ -e "$backup_bin" || -e "$backup_manifest" ]]; then
+        echo "refusing to replace an existing version backup for stamp=$stamp" >&2
+        exit 1
+    fi
+    cp --preserve=mode,timestamps -- "$CURRENT_BIN" "$backup_bin"
+    if [[ -f "$CURRENT_MANIFEST" ]]; then
+        cp --preserve=mode,timestamps -- "$CURRENT_MANIFEST" "$backup_manifest"
+    fi
+    echo "backup old_count=$old_count old_sha=$old_sha path=$backup_bin"
+fi
+
+rollback_disk() {
+    echo "activation failed; restoring previous on-disk version"
+    if [[ "$previous_exists" == true ]]; then
+        restore_bin="$DATA_DIR/.rollback-${stamp}.bin"
+        cp --preserve=mode,timestamps -- "$backup_bin" "$restore_bin"
+        mv -f -- "$restore_bin" "$CURRENT_BIN"
+        if [[ -f "$backup_manifest" ]]; then
+            restore_manifest="$DATA_DIR/.rollback-${stamp}.manifest.json"
+            cp --preserve=mode,timestamps -- "$backup_manifest" "$restore_manifest"
+            mv -f -- "$restore_manifest" "$CURRENT_MANIFEST"
+        else
+            rm -f -- "$CURRENT_MANIFEST"
+        fi
+    else
+        rm -f -- "$CURRENT_BIN" "$CURRENT_MANIFEST"
+    fi
+}
+
+stage="publish"
+if ! mv -f -- "$candidate_bin" "$CURRENT_BIN"; then
+    echo "update failed stage=$stage: binary rename failed" >&2
+    exit 1
+fi
+if ! mv -f -- "$candidate_manifest" "$CURRENT_MANIFEST"; then
+    rollback_disk
+    echo "update failed stage=$stage: manifest rename failed" >&2
+    exit 1
+fi
+
+stage="nginx-config-test"
+if ! "$NGINX_BIN" -t -c "$NGINX_CONF"; then
+    rollback_disk
+    echo "update failed stage=$stage" >&2
+    exit 1
+fi
+stage="nginx-reload"
+if ! reload_nginx; then
+    rollback_disk
+    echo "update failed stage=$stage" >&2
+    exit 1
+fi
+
+stage="health-check"
+health_ok=true
+if [[ -n "${HEALTH_URL:-}" ]]; then
+    health_ok=false
+    for ((attempt = 1; attempt <= HEALTH_RETRIES; attempt++)); do
+        if curl --fail --silent --show-error --max-time 5 \
+            -H "Host: ${HEALTH_HOST:?HEALTH_HOST is required when HEALTH_URL is set}" \
+            "$HEALTH_URL" | grep -Fq -- "$new_sha"; then
+            health_ok=true
+            break
+        fi
+        sleep "$HEALTH_RETRY_DELAY"
+    done
+fi
+if [[ "$health_ok" != true ]]; then
+    rollback_disk
+    if "$NGINX_BIN" -t -c "$NGINX_CONF"; then
+        reload_nginx || true
+    fi
+    echo "health check did not observe data_sha256=$new_sha" >&2
+    exit 1
+fi
+
+# Keep only the newest complete version backups. Filenames are generated above.
+stage="history-prune"
+mapfile -t old_versions < <(find "$VERSIONS_DIR" -maxdepth 1 -type f -name '*.bin' -printf '%T@ %p\n' | sort -nr | tail -n "+$((KEEP_VERSIONS + 1))" | cut -d' ' -f2-)
+for old_bin in "${old_versions[@]}"; do
+    old_manifest="${old_bin%.bin}.manifest.json"
+    rm -f -- "$old_bin" "$old_manifest"
+done
+
+finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+echo "[$finished_at] update success count=$new_count data_sha256=$new_sha"

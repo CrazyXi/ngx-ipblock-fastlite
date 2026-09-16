@@ -1,0 +1,65 @@
+# This is a merge example, not a complete nginx.conf. ngx_lua permits only one
+# init_by_lua* handler in a context. Merge these statements into existing hooks;
+# NEVER move ip_blacklist.init() to init_worker_by_lua*: doing so loses pre-fork
+# copy-on-write sharing and repeats parsing/verification per worker. The module
+# rejects this wrong phase explicitly.
+# do not paste a second init/access directive over panel, WAF or auth hooks.
+
+# Inside the existing http { } block:
+lua_package_path "/opt/ngx-ipblock-fastlite/lua/?.lua;;";
+# If Cloudflare Real IP is already configured in http {}, do not include it again.
+# Direct sites need no Cloudflare Real IP configuration.
+
+init_by_lua_block {
+    -- Keep any existing initialization before/after this call as appropriate.
+    require("ip_blacklist").init({
+        path = "/opt/ngx-ipblock-fastlite/current.bin",
+        max_ips = 2000000,
+        default_site = {
+            enabled = true,            -- Enables blocking; unrelated to Cloudflare.
+            require_cf_header = false, -- Default: trust Nginx's $remote_addr.
+        },
+
+        -- Optional per-host override. A site entry replaces default_site for
+        -- that host, so keep enabled=true when enabling strict CF validation.
+        -- sites = {
+        --     ["www.example.com"] = {
+        --         enabled = true,
+        --         -- Small exact-IPv4 exceptions only.
+        --         whitelist = { "192.0.2.10" },
+        --         -- Cloudflare site only; omit for direct-origin sites.
+        --         require_cf_header = true,
+        --         fail_closed = true,
+        --         block_status = 444,
+        --         invalid_status = 403,
+        --         log_hits = true,
+        --         log_sample_rate = 0.01,
+        --         log_rate_per_second = 10,
+        --         anomaly_log_rate_per_second = 2,
+        --     },
+        -- },
+    })
+}
+
+# REQUIRED: init() only loads the data; this hook performs request lookups.
+# At http level it is inherited only where a child context does not define its
+# own access_by_lua*. Merge this call into every existing WAF/auth access hook.
+access_by_lua_block {
+    require("ip_blacklist").access()
+}
+
+# Local/admin-only diagnostic endpoint. Its empty access handler prevents the
+# inherited blacklist hook from filtering this health/status request.
+# Put this inside a protected server block and test inheritance in the final config.
+location = /__ip_blacklist_status {
+    allow 127.0.0.1;
+    allow ::1;
+    deny all;
+    access_by_lua_block { }
+    default_type application/json;
+    content_by_lua_block {
+        local cjson = require "cjson.safe"
+        ngx.header["Cache-Control"] = "no-store"
+        ngx.say(cjson.encode(require("ip_blacklist").status()))
+    }
+}

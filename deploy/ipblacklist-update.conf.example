@@ -1,0 +1,27 @@
+# Install as /etc/ipblacklist-update.conf, root:root 0600.
+SOURCE_URL="https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/main/abuseipdb-s100-30d.ipv4"
+BUILDER="/usr/local/bin/ipblacklist-builder"
+DATA_DIR="/opt/ngx-ipblock-fastlite"
+VERSIONS_DIR="/opt/ngx-ipblock-fastlite/versions"
+CURRENT_BIN="/opt/ngx-ipblock-fastlite/current.bin"
+CURRENT_MANIFEST="/opt/ngx-ipblock-fastlite/current.manifest.json"
+LOCK_FILE="/run/lock/ipblacklist-update.lock"
+LOG_FILE="/var/log/ipblacklist-update.log"
+NGINX_BIN="/www/server/nginx/sbin/nginx"
+NGINX_CONF="/www/server/nginx/conf/nginx.conf"
+PID_FILE="/www/server/nginx/logs/nginx.pid"
+
+MAX_INPUT_BYTES=104857600
+MAX_IPS=2000000
+DOWNLOAD_TIMEOUT="30s"
+DOWNLOAD_RETRIES=2
+MAX_INCREASE_PERCENT=50
+MAX_DECREASE_PERCENT=50
+KEEP_VERSIONS=7
+
+# Optional local/admin-only endpoint from nginx-integration.conf.example.
+# When set, it must return JSON containing the newly loaded data_sha256.
+HEALTH_URL="http://127.0.0.1/__ip_blacklist_status"
+HEALTH_HOST="example.com"
+HEALTH_RETRIES=10
+HEALTH_RETRY_DELAY=1
