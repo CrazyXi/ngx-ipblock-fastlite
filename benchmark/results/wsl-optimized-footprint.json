@@ -1,0 +1,320 @@
+{
+  "openresty_bytes": 149388654,
+  "apisix_bytes": 75414581,
+  "component_bytes": {
+    "module": 17184,
+    "geo": 0,
+    "matcher": 9320,
+    "apisix": 4288,
+    "ipset": 3006170,
+    "nft": 1388745
+  },
+  "ipset_packages": [
+    "iptables",
+    "ipset",
+    "libipset13",
+    "libxtables12",
+    "libmnl0",
+    "libnftnl11"
+  ],
+  "nft_packages": [
+    "nftables",
+    "libnftables1",
+    "libxtables12",
+    "libnftnl11",
+    "libmnl0"
+  ],
+  "sizes": {
+    "150000": {
+      "rule_bytes": {
+        "module": 600064,
+        "geo": 2581192,
+        "matcher": 2131192,
+        "apisix": 2581356,
+        "ipset": 3931308,
+        "nft": 2290782
+      },
+      "nft_cycles": [
+        {
+          "before_kib": {
+            "MemAvailable": 15479820,
+            "SUnreclaim": 41640,
+            "VmallocUsed": 30956
+          },
+          "loaded_kib": {
+            "MemAvailable": 15469524,
+            "SUnreclaim": 55240,
+            "VmallocUsed": 30940
+          },
+          "after_kib": {
+            "MemAvailable": 15473632,
+            "SUnreclaim": 41800,
+            "VmallocUsed": 30924
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15473632,
+            "SUnreclaim": 41800,
+            "VmallocUsed": 30924
+          },
+          "loaded_kib": {
+            "MemAvailable": 15464404,
+            "SUnreclaim": 55280,
+            "VmallocUsed": 30940
+          },
+          "after_kib": {
+            "MemAvailable": 15467880,
+            "SUnreclaim": 41808,
+            "VmallocUsed": 30940
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15468356,
+            "SUnreclaim": 41808,
+            "VmallocUsed": 30940
+          },
+          "loaded_kib": {
+            "MemAvailable": 15466660,
+            "SUnreclaim": 55292,
+            "VmallocUsed": 30940
+          },
+          "after_kib": {
+            "MemAvailable": 15471308,
+            "SUnreclaim": 41852,
+            "VmallocUsed": 30940
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15474308,
+            "SUnreclaim": 41852,
+            "VmallocUsed": 30940
+          },
+          "loaded_kib": {
+            "MemAvailable": 15479740,
+            "SUnreclaim": 55328,
+            "VmallocUsed": 30940
+          },
+          "after_kib": {
+            "MemAvailable": 15487248,
+            "SUnreclaim": 41840,
+            "VmallocUsed": 30940
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15488568,
+            "SUnreclaim": 41840,
+            "VmallocUsed": 30940
+          },
+          "loaded_kib": {
+            "MemAvailable": 15488340,
+            "SUnreclaim": 55320,
+            "VmallocUsed": 30940
+          },
+          "after_kib": {
+            "MemAvailable": 15493144,
+            "SUnreclaim": 41848,
+            "VmallocUsed": 30940
+          }
+        }
+      ]
+    },
+    "400000": {
+      "rule_bytes": {
+        "module": 1600064,
+        "geo": 6879856,
+        "matcher": 5679856,
+        "apisix": 6880020,
+        "ipset": 10479972,
+        "nft": 6105094
+      },
+      "nft_cycles": [
+        {
+          "before_kib": {
+            "MemAvailable": 15441652,
+            "SUnreclaim": 42040,
+            "VmallocUsed": 30940
+          },
+          "loaded_kib": {
+            "MemAvailable": 15430408,
+            "SUnreclaim": 67068,
+            "VmallocUsed": 41200
+          },
+          "after_kib": {
+            "MemAvailable": 15447984,
+            "SUnreclaim": 42092,
+            "VmallocUsed": 30940
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15447984,
+            "SUnreclaim": 42092,
+            "VmallocUsed": 30940
+          },
+          "loaded_kib": {
+            "MemAvailable": 15436968,
+            "SUnreclaim": 67072,
+            "VmallocUsed": 41200
+          },
+          "after_kib": {
+            "MemAvailable": 15453244,
+            "SUnreclaim": 42088,
+            "VmallocUsed": 30940
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15453940,
+            "SUnreclaim": 42088,
+            "VmallocUsed": 30940
+          },
+          "loaded_kib": {
+            "MemAvailable": 15441988,
+            "SUnreclaim": 67060,
+            "VmallocUsed": 41200
+          },
+          "after_kib": {
+            "MemAvailable": 15465636,
+            "SUnreclaim": 42084,
+            "VmallocUsed": 30940
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15467184,
+            "SUnreclaim": 42084,
+            "VmallocUsed": 30940
+          },
+          "loaded_kib": {
+            "MemAvailable": 15446572,
+            "SUnreclaim": 67064,
+            "VmallocUsed": 41216
+          },
+          "after_kib": {
+            "MemAvailable": 15452620,
+            "SUnreclaim": 42088,
+            "VmallocUsed": 30956
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15456704,
+            "SUnreclaim": 42088,
+            "VmallocUsed": 30956
+          },
+          "loaded_kib": {
+            "MemAvailable": 15449464,
+            "SUnreclaim": 67068,
+            "VmallocUsed": 41216
+          },
+          "after_kib": {
+            "MemAvailable": 15464424,
+            "SUnreclaim": 42092,
+            "VmallocUsed": 30956
+          }
+        }
+      ]
+    },
+    "600000": {
+      "rule_bytes": {
+        "module": 2400064,
+        "geo": 10356286,
+        "matcher": 8556286,
+        "apisix": 10356450,
+        "ipset": 15756402,
+        "nft": 9194004
+      },
+      "nft_cycles": [
+        {
+          "before_kib": {
+            "MemAvailable": 15436752,
+            "SUnreclaim": 42036,
+            "VmallocUsed": 30972
+          },
+          "loaded_kib": {
+            "MemAvailable": 15400140,
+            "SUnreclaim": 79436,
+            "VmallocUsed": 41232
+          },
+          "after_kib": {
+            "MemAvailable": 15444072,
+            "SUnreclaim": 41964,
+            "VmallocUsed": 30972
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15444072,
+            "SUnreclaim": 41964,
+            "VmallocUsed": 30972
+          },
+          "loaded_kib": {
+            "MemAvailable": 15401944,
+            "SUnreclaim": 79504,
+            "VmallocUsed": 41232
+          },
+          "after_kib": {
+            "MemAvailable": 15447124,
+            "SUnreclaim": 42032,
+            "VmallocUsed": 30972
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15449872,
+            "SUnreclaim": 42032,
+            "VmallocUsed": 30972
+          },
+          "loaded_kib": {
+            "MemAvailable": 15412896,
+            "SUnreclaim": 79508,
+            "VmallocUsed": 41232
+          },
+          "after_kib": {
+            "MemAvailable": 15455092,
+            "SUnreclaim": 42036,
+            "VmallocUsed": 30972
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15455092,
+            "SUnreclaim": 42036,
+            "VmallocUsed": 30972
+          },
+          "loaded_kib": {
+            "MemAvailable": 15414644,
+            "SUnreclaim": 79448,
+            "VmallocUsed": 41232
+          },
+          "after_kib": {
+            "MemAvailable": 15456048,
+            "SUnreclaim": 41972,
+            "VmallocUsed": 30972
+          }
+        },
+        {
+          "before_kib": {
+            "MemAvailable": 15456676,
+            "SUnreclaim": 41972,
+            "VmallocUsed": 30972
+          },
+          "loaded_kib": {
+            "MemAvailable": 15411900,
+            "SUnreclaim": 79500,
+            "VmallocUsed": 41232
+          },
+          "after_kib": {
+            "MemAvailable": 15452404,
+            "SUnreclaim": 42028,
+            "VmallocUsed": 30972
+          }
+        }
+      ]
+    }
+  }
+}

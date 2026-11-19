@@ -1,7 +1,7 @@
 # Operations · [简体中文](OPERATIONS.zh-CN.md)
 
 This page covers first deployment, update, and rollback. See the
-[English README](../README.md) for requirements and the small setup example.
+[English README](../README.en.md) for requirements and the small setup example.
 Paths in the example files are placeholders; adjust them to your host.
 
 ## First deployment
