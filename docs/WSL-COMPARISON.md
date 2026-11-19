@@ -10,7 +10,7 @@ The pinned 30-, 180- and 365-day feeds contained 153,496, 436,778 and 754,110 un
 
 ## Measurements
 
-These historical ipset rates are superseded by the [paired rule-on/off comparison](WSL-OPTIMIZED.md) and are not used to rank firewall performance. Native nftables is omitted for lack of attributable total memory; raw samples are retained.
+These historical all-allowed ipset rates do not measure drop capacity. See the [paired all-allowed samples](../benchmark/results/wsl-ipset-paired.jsonl) and the [current 10%-listed comparison](../README.en.md#performance-comparison). Native nftables is omitted for lack of attributable total memory; raw samples are retained.
 
 The stock OpenResty control forwards to the same upstream using OpenResty. Firewall runs add a kernel source-address check to this setup. The project module runs an HTTP access hook that selects the site policy, parses the client address and looks it up. Throughput covers the full request path.
 

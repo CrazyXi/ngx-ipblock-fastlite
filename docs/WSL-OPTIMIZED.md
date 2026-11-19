@@ -1,21 +1,26 @@
-# Optimized module on WSL · [简体中文](WSL-OPTIMIZED.zh-CN.md)
+# WSL method: 90% unlisted, 10% listed · [简体中文](WSL-OPTIMIZED.zh-CN.md)
 
-Local WSL Debian 12, one worker, the same HTTP 204 upstream and 32 persistent connections. Of the six blocking implementations tested, native nftables is omitted because its set memory could not be isolated. Stock OpenResty and APISIX controls load no list; the paired ipset control keeps the set resident and toggles only the rules. [Inputs and environment](WSL-COMPARISON.md)
+See the [README](../README.en.md#performance-comparison) for hardware and results. All three datasets come from a [pinned borestad/blocklist-abuseipdb revision](https://github.com/borestad/blocklist-abuseipdb/tree/eb4a4a4ec7b2453b176cec0e7da0e0fb3033121c); the runner checks each [payload SHA-256](../benchmark/results/wsl-sources.jsonl).
 
-Each cell reads **allowed throughput · total memory · installed size (blocking component + IP list; excludes OpenResty)**.
+## Workload and validation
 
-[See the three-size comparison in the README](../README.en.md#performance-comparison).
+The client only targets `127.0.0.1:18080` in an isolated network namespace. Its 32 concurrent clients explicitly bind source addresses: 16 verified unlisted loopback IPs and 16 evenly spaced members from the sorted list. Each client uses a listed source exactly once per ten attempts. Each attempt opens a new TCP connection; there are no forwarded headers or retries. All front ends use the same 204 upstream.
 
-**Total memory** = warm PSS of the front-end master and children plus the separate kernel blocklist, if any. ipset reports its own `Size in memory`; in-process lists are already in PSS. This is not whole-VM memory: the common upstream, load generator and general kernel overhead are excluded. Native nftables is omitted because VM-wide counter deltas cannot reliably isolate its set memory.
+All unlisted attempts must return 204. Listed controls must also return 204; the project must close with zero HTTP response bytes (default 444), and geo, lua-resty-ipmatcher and the APISIX plugin must return 403. ipset drops inbound packets whose source is in the set and whose destination port is 18080. Both connect timeouts and the per-window DROP packet delta must equal the planned listed count. Other errors are not counted as blocks.
 
-**Installed size** counts the component and loadable list or rules only. OpenResty, the APISIX host and the offline builder are excluded. Built-in geo counts rules only; ipset counts the tools, libraries and saved rules; the APISIX plugin counts plugin files and its list-bearing route. A control’s 0 B means no blocking component or list, not an empty host.
+Warm-up: 3,200 attempts per case. The initial run used 5 × 12,800 attempts for all engines; short HTTP samples prompted 5 × 128,000 attempts for every HTTP case. The table uses the longer HTTP run and the five original ipset samples (about eight seconds each). Rates are medians of attempts / elapsed wall seconds, counting verified allowed and denied outcomes, not successful HTTP responses. Memory is post-run front-end master/child PSS plus ipset-reported set bytes, not peak or VM memory. Disk figures reuse the [file inventory](../benchmark/results/wsl-optimized-footprint.json) for the same components and datasets, excluding the host.
 
-Throughput measures HTTP 204 responses for one fixed unlisted client, not rejections. Except for ², rates are medians of three 3-second samples. ¹ denotes repeat runs after unstable samples (150k APISIX control; 400k project and geo). See the raw records for P99, 403 hit rates and first-pass values; [default 444 closes](WSL-COMPARISON.md#before-and-after-the-storage-change) were tested separately.
+**Interpretation:** DROP provides no response. With 32 slots, 10% listed and a 200 ms dial timeout, the client itself limits ipset to roughly `32 / (0.10 × 0.20) = 1,600 attempts/s` even before other work. This is not kernel drop capacity or a firewall/HTTP speed ratio. Runs were sequential, with no TLS, CDN, real network latency or CIDR; small differences are not a reliable ranking.
 
-**² iptables + ipset: separate paired retest.** The old run read DROP counters before the timed samples, not across them. The retest kept the proxy running in an isolated network namespace, toggling rules in four AB / BA / AB / BA pairs per size. Enabled rules do one source-set lookup on port 18080: ACCEPT nonmembers, otherwise DROP. Source-bound probes verified both paths before each 1-second warm-up and 5-second sample. ACCEPT packet counts increased and DROP counts were unchanged in every enabled window. The initial 150k rule-off samples spanned over 15×, so this size was repeated in full and uses the repeat. Rates come from completed wrk requests, not packets. Memory is from the original comparison.
+## Reproduce
 
-The rule-off run is a control for the effect of enabling the lookup on allowed throughput, not a separate blocking engine. Matched rule-off medians for ² (150k / 400k / 600k): 155,273 req/s / 157,995 req/s / 157,948 req/s. Median paired percentage changes (min … max): +0.7% (-2.1% … +2.6%) / +0.2% (-1.9% … +1.3%) / +0.4% (-1.2% … +0.5%). Do not subtract ² from the first row of the older campaign or interpret allowed requests/s as DROP capacity.
+Run at the Linux repository root. `lists/{150000,400000,600000}/ips` are the three subsets generated by the [original runner](WSL-COMPARISON.md). Use a fresh temporary parent; the runner refuses the host network or mount namespace.
 
-## Artifacts
+```sh
+run=$(mktemp -d)
+go build -o "$run/mixedclient" ./benchmark/mixedclient
+sudo unshare -nm --propagation private python3 benchmark/wsl_compare.py "$run/pilot" lists --mixed-client "$run/mixedclient" --mixed-http-count 12800
+sudo unshare -nm --propagation private python3 benchmark/wsl_compare.py "$run/http" lists --mixed-client "$run/mixedclient" --skip-ipset
+```
 
-Module SHA-256 `617e818eb7056454553a9e401a0f9cbfac7459c39bedb1c6d6a1a85b25fbd414`。 [First pass](../benchmark/results/wsl-optimized-samples.jsonl) · [Repeat](../benchmark/results/wsl-optimized-repeat.jsonl) · [Footprint readings](../benchmark/results/wsl-optimized-footprint.json) · [Benchmark runner](../benchmark/wsl_compare.py) · [Footprint runner](../benchmark/wsl_footprint.py) · [Paired ipset samples](../benchmark/results/wsl-ipset-paired.jsonl) · [150k repeat](../benchmark/results/wsl-ipset-paired-repeat.jsonl) · [Paired runner](../benchmark/wsl_ipset_paired.py)
+Raw records: [pilot, including ipset counters](../benchmark/results/wsl-mixed-pilot.jsonl) · [long HTTP samples](../benchmark/results/wsl-mixed-http.jsonl). The [historical all-allowed samples](../benchmark/results/wsl-optimized-samples.jsonl) measured a different workload; they cannot establish optimization percentages against this run.

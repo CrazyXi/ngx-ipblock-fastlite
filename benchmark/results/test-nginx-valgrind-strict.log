@@ -1,0 +1,29 @@
+t/001-integration.t TEST 1: exact lookup finds an address from the fixture
+t/001-integration.t TEST 1: exact lookup finds an address from the fixture - Can't connect to 127.0.0.1:1984: Connection refused
+	Retry connecting after 0.675 sec
+t/001-integration.t TEST 2: exact lookup misses an address outside the fixture
+t/001-integration.t TEST 2: exact lookup misses an address outside the fixture - Can't connect to 127.0.0.1:1984: Connection refused
+	Retry connecting after 0.675 sec
+t/001-integration.t TEST 3: access phase allows a non-listed client
+t/001-integration.t TEST 3: access phase allows a non-listed client - Can't connect to 127.0.0.1:1984: Connection refused
+	Retry connecting after 0.675 sec
+t/001-integration.t TEST 4: access phase rejects a listed client before content
+t/001-integration.t TEST 4: access phase rejects a listed client before content - Can't connect to 127.0.0.1:1984: Connection refused
+	Retry connecting after 0.675 sec
+t/001-integration.t .. 
+ok 1 - t/001-integration.t TEST 1: exact lookup finds an address from the fixture - status code ok
+ok 2 - t/001-integration.t TEST 1: exact lookup finds an address from the fixture - response_body - response is expected (repeated req 0, req 0)
+ok 3 - t/001-integration.t TEST 1: exact lookup finds an address from the fixture - pattern "[error]" does not match a line in error.log (req 0)
+ok 4 - t/001-integration.t TEST 2: exact lookup misses an address outside the fixture - status code ok
+ok 5 - t/001-integration.t TEST 2: exact lookup misses an address outside the fixture - response_body - response is expected (repeated req 0, req 0)
+ok 6 - t/001-integration.t TEST 2: exact lookup misses an address outside the fixture - pattern "[error]" does not match a line in error.log (req 0)
+ok 7 - t/001-integration.t TEST 3: access phase allows a non-listed client - status code ok
+ok 8 - t/001-integration.t TEST 3: access phase allows a non-listed client - pattern "[error]" does not match a line in error.log (req 0)
+ok 9 - t/001-integration.t TEST 4: access phase rejects a listed client before content - status code ok
+ok 10 - t/001-integration.t TEST 4: access phase rejects a listed client before content - response_body - response is expected (repeated req 0, req 0)
+ok 11 - t/001-integration.t TEST 4: access phase rejects a listed client before content - pattern "[error]" does not match a line in error.log (req 0)
+1..11
+ok
+All tests successful.
+Files=1, Tests=11, 11 wallclock secs ( 0.02 usr  0.00 sys +  8.96 cusr  0.20 csys =  9.18 CPU)
+Result: PASS

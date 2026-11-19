@@ -10,7 +10,7 @@
 
 ## 实测
 
-本页为旧轮数据，不用其 ipset 吞吐评价防火墙性能；已用[同进程开关规则的配对复测](WSL-OPTIMIZED.zh-CN.md)替代。nftables 缺少可归因的总内存，已从表中移除，原始样本保留。
+本页为历史纯放行数据，不用其 ipset 吞吐评价丢包能力。另见[纯放行开关对照原始记录](../benchmark/results/wsl-ipset-paired.jsonl)及[当前 10% 名单命中横评](../README.md#性能横评)。nftables 缺少可归因的总内存，已从表中移除，原始样本保留。
 
 原生 OpenResty 对照行使用同一 OpenResty 和后端。防火墙行也直接转发 HTTP，同时由内核检查入站包的源地址。本项目行额外执行 HTTP access 钩子，按站点配置解析访客地址并查表。表中吞吐覆盖整条请求路径，未单独计时匹配算法。
 

@@ -4,8 +4,8 @@ The 2026-09-15 local snapshot of the upstream
 [30-day IPv4 feed](https://github.com/borestad/blocklist-abuseipdb/blob/main/abuseipdb-s100-30d.ipv4)
 contained **151,253 unique IPs**. The builder produced a **605,076-byte**
 `IPBLV001` file. Exact source, binary, and payload SHA-256 values are in
-[snapshot.json](snapshot.json); the snapshot was used for the documented local
-functional and pressure tests.
+[snapshot.json](snapshot.json); the snapshot was used for the historical
+Windows tests and the current Linux Test::Nginx/Valgrind tests.
 
 The repository includes the exact `snapshot.bin` and public checksum record
 `snapshot.json`. The upstream repository credits AbuseIPDB but does not state

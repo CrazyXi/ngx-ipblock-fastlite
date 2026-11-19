@@ -1,0 +1,3496 @@
+===== ROUND 1 =====
+t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/protected
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 158047,
+  "kBps_per_sec": 17902,
+  "secs_elapsed": 6.327220,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998975
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995125,
+    "bytes_headers":    115995125,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1025,
+     "avg":        90,
+     "stddev":    219,
+     "unit": "us",
+      "0%":        21,
+     "50%":        43,
+     "66%":        50,
+     "75%":        54,
+     "80%":        57,
+     "90%":        69,
+     "95%":       243,
+     "98%":      1085,
+     "99%":      1409,
+    "100%":      1641
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       312,
+     "stddev":     24,
+     "unit": "us",
+      "0%":        38,
+     "50%":       310,
+     "66%":       315,
+     "75%":       318,
+     "80%":       321,
+     "90%":       330,
+     "95%":       340,
+     "98%":       358,
+     "99%":       383,
+    "100%":      1867
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       312,
+     "stddev":     24,
+     "unit": "us",
+      "0%":        38,
+     "50%":       310,
+     "66%":       315,
+     "75%":       318,
+     "80%":       321,
+     "90%":       330,
+     "95%":       340,
+     "98%":       359,
+     "99%":       383,
+    "100%":      1867
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       312,
+     "stddev":     25,
+     "unit": "us",
+      "0%":        38,
+     "50%":       310,
+     "66%":       315,
+     "75%":       318,
+     "80%":       321,
+     "90%":       330,
+     "95%":       340,
+     "98%":       359,
+     "99%":       383,
+    "100%":      1954
+  }
+}
+t/100-benchmark.t TEST 1: baseline 204 without the access hook
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/baseline
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 171098,
+  "kBps_per_sec": 19381,
+  "secs_elapsed": 5.844585,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998976
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995130,
+    "bytes_headers":    115995130,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1024,
+     "avg":        90,
+     "stddev":    203,
+     "unit": "us",
+      "0%":        22,
+     "50%":        47,
+     "66%":        54,
+     "75%":        58,
+     "80%":        62,
+     "90%":        75,
+     "95%":       180,
+     "98%":       974,
+     "99%":      1264,
+    "100%":      1591
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       288,
+     "stddev":     21,
+     "unit": "us",
+      "0%":       114,
+     "50%":       286,
+     "66%":       291,
+     "75%":       295,
+     "80%":       298,
+     "90%":       307,
+     "95%":       315,
+     "98%":       331,
+     "99%":       351,
+    "100%":       814
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       288,
+     "stddev":     21,
+     "unit": "us",
+      "0%":       114,
+     "50%":       286,
+     "66%":       292,
+     "75%":       295,
+     "80%":       298,
+     "90%":       307,
+     "95%":       315,
+     "98%":       331,
+     "99%":       351,
+    "100%":       814
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       288,
+     "stddev":     23,
+     "unit": "us",
+      "0%":       114,
+     "50%":       286,
+     "66%":       292,
+     "75%":       295,
+     "80%":       298,
+     "90%":       307,
+     "95%":       315,
+     "98%":       331,
+     "99%":       351,
+    "100%":      1814
+  }
+}
+t/100-benchmark.t .. 
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 150057,
+  "kBps_per_sec": 16994,
+  "secs_elapsed": 0.133282,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       968,
+     "stddev":    469,
+     "unit": "us",
+      "0%":       247,
+     "50%":       956,
+     "66%":      1209,
+     "75%":      1337,
+     "80%":      1435,
+     "90%":      1606,
+     "95%":      1661,
+     "98%":      1725,
+     "99%":      1725,
+    "100%":      1803
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       323,
+     "stddev":     40,
+     "unit": "us",
+      "0%":       146,
+     "50%":       316,
+     "66%":       327,
+     "75%":       334,
+     "80%":       337,
+     "90%":       348,
+     "95%":       361,
+     "98%":       396,
+     "99%":       521,
+    "100%":       919
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       323,
+     "stddev":     40,
+     "unit": "us",
+      "0%":       147,
+     "50%":       316,
+     "66%":       327,
+     "75%":       334,
+     "80%":       338,
+     "90%":       348,
+     "95%":       361,
+     "98%":       396,
+     "99%":       521,
+    "100%":       919
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       326,
+     "stddev":     76,
+     "unit": "us",
+      "0%":       147,
+     "50%":       316,
+     "66%":       327,
+     "75%":       334,
+     "80%":       338,
+     "90%":       348,
+     "95%":       361,
+     "98%":       397,
+     "99%":       532,
+    "100%":      2035
+  }
+}
+ok 1 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - tests skipped due to the "benchmark" testing mode
+ok 2 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - no_error_log - tests skipped due to the "benchmark" testing mode
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 160948,
+  "kBps_per_sec": 18227,
+  "secs_elapsed": 0.124263,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       837,
+     "stddev":    409,
+     "unit": "us",
+      "0%":       249,
+     "50%":       792,
+     "66%":      1042,
+     "75%":      1139,
+     "80%":      1243,
+     "90%":      1416,
+     "95%":      1481,
+     "98%":      1545,
+     "99%":      1545,
+    "100%":      1611
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       301,
+     "stddev":     29,
+     "unit": "us",
+      "0%":       146,
+     "50%":       299,
+     "66%":       308,
+     "75%":       312,
+     "80%":       315,
+     "90%":       326,
+     "95%":       337,
+     "98%":       359,
+     "99%":       405,
+    "100%":       706
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       301,
+     "stddev":     29,
+     "unit": "us",
+      "0%":       146,
+     "50%":       299,
+     "66%":       308,
+     "75%":       312,
+     "80%":       316,
+     "90%":       326,
+     "95%":       338,
+     "98%":       359,
+     "99%":       405,
+    "100%":       706
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       303,
+     "stddev":     54,
+     "unit": "us",
+      "0%":       146,
+     "50%":       299,
+     "66%":       308,
+     "75%":       313,
+     "80%":       316,
+     "90%":       326,
+     "95%":       338,
+     "98%":       361,
+     "99%":       421,
+    "100%":      1847
+  }
+}
+ok 3 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - tests skipped due to the "benchmark" testing mode
+ok 4 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - no_error_log - tests skipped due to the "benchmark" testing mode
+1..4
+ok
+All tests successful.
+Files=1, Tests=4, 14 wallclock secs ( 0.02 usr  0.00 sys +  1.96 cusr 11.29 csys = 13.27 CPU)
+Result: PASS
+===== ROUND 2 =====
+t/100-benchmark.t TEST 1: baseline 204 without the access hook
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/baseline
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 171525,
+  "kBps_per_sec": 19429,
+  "secs_elapsed": 5.830022,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998976
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995130,
+    "bytes_headers":    115995130,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1024,
+     "avg":       100,
+     "stddev":    214,
+     "unit": "us",
+      "0%":        22,
+     "50%":        51,
+     "66%":        59,
+     "75%":        65,
+     "80%":        69,
+     "90%":        85,
+     "95%":       232,
+     "98%":      1064,
+     "99%":      1212,
+    "100%":      1456
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       287,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        27,
+     "50%":       285,
+     "66%":       291,
+     "75%":       295,
+     "80%":       298,
+     "90%":       307,
+     "95%":       317,
+     "98%":       335,
+     "99%":       358,
+    "100%":       810
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       287,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        27,
+     "50%":       285,
+     "66%":       291,
+     "75%":       295,
+     "80%":       298,
+     "90%":       307,
+     "95%":       317,
+     "98%":       335,
+     "99%":       358,
+    "100%":       810
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       288,
+     "stddev":     26,
+     "unit": "us",
+      "0%":        27,
+     "50%":       285,
+     "66%":       291,
+     "75%":       295,
+     "80%":       298,
+     "90%":       307,
+     "95%":       317,
+     "98%":       335,
+     "99%":       358,
+    "100%":      2146
+  }
+}
+t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/protected
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 159552,
+  "kBps_per_sec": 18073,
+  "secs_elapsed": 6.267510,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998975
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995125,
+    "bytes_headers":    115995125,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1025,
+     "avg":        75,
+     "stddev":    143,
+     "unit": "us",
+      "0%":        19,
+     "50%":        44,
+     "66%":        51,
+     "75%":        55,
+     "80%":        58,
+     "90%":        69,
+     "95%":       113,
+     "98%":       613,
+     "99%":       924,
+    "100%":      1211
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       309,
+     "stddev":     21,
+     "unit": "us",
+      "0%":        59,
+     "50%":       308,
+     "66%":       312,
+     "75%":       316,
+     "80%":       318,
+     "90%":       326,
+     "95%":       335,
+     "98%":       351,
+     "99%":       369,
+    "100%":      1978
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       309,
+     "stddev":     21,
+     "unit": "us",
+      "0%":        59,
+     "50%":       308,
+     "66%":       312,
+     "75%":       316,
+     "80%":       318,
+     "90%":       326,
+     "95%":       335,
+     "98%":       351,
+     "99%":       369,
+    "100%":      1978
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       309,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        59,
+     "50%":       308,
+     "66%":       312,
+     "75%":       316,
+     "80%":       318,
+     "90%":       326,
+     "95%":       335,
+     "98%":       351,
+     "99%":       369,
+    "100%":      2072
+  }
+}
+t/100-benchmark.t .. 
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 162091,
+  "kBps_per_sec": 18356,
+  "secs_elapsed": 0.123387,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":      1092,
+     "stddev":    168,
+     "unit": "us",
+      "0%":       790,
+     "50%":      1097,
+     "66%":      1126,
+     "75%":      1181,
+     "80%":      1247,
+     "90%":      1361,
+     "95%":      1364,
+     "98%":      1373,
+     "99%":      1373,
+    "100%":      1399
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       299,
+     "stddev":     38,
+     "unit": "us",
+      "0%":       166,
+     "50%":       293,
+     "66%":       303,
+     "75%":       309,
+     "80%":       313,
+     "90%":       324,
+     "95%":       337,
+     "98%":       383,
+     "99%":       445,
+    "100%":       790
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       299,
+     "stddev":     38,
+     "unit": "us",
+      "0%":       166,
+     "50%":       293,
+     "66%":       303,
+     "75%":       309,
+     "80%":       313,
+     "90%":       324,
+     "95%":       337,
+     "98%":       383,
+     "99%":       445,
+    "100%":       790
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       302,
+     "stddev":     75,
+     "unit": "us",
+      "0%":       166,
+     "50%":       293,
+     "66%":       303,
+     "75%":       309,
+     "80%":       313,
+     "90%":       324,
+     "95%":       337,
+     "98%":       383,
+     "99%":       453,
+    "100%":      2042
+  }
+}
+ok 1 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - tests skipped due to the "benchmark" testing mode
+ok 2 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - no_error_log - tests skipped due to the "benchmark" testing mode
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 150873,
+  "kBps_per_sec": 17086,
+  "secs_elapsed": 0.132561,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       786,
+     "stddev":    356,
+     "unit": "us",
+      "0%":       251,
+     "50%":       758,
+     "66%":      1019,
+     "75%":      1098,
+     "80%":      1148,
+     "90%":      1225,
+     "95%":      1303,
+     "98%":      1370,
+     "99%":      1370,
+    "100%":      1428
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       322,
+     "stddev":     40,
+     "unit": "us",
+      "0%":       142,
+     "50%":       316,
+     "66%":       327,
+     "75%":       334,
+     "80%":       337,
+     "90%":       348,
+     "95%":       362,
+     "98%":       412,
+     "99%":       481,
+    "100%":       929
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       322,
+     "stddev":     40,
+     "unit": "us",
+      "0%":       142,
+     "50%":       316,
+     "66%":       327,
+     "75%":       334,
+     "80%":       338,
+     "90%":       349,
+     "95%":       362,
+     "98%":       412,
+     "99%":       481,
+    "100%":       929
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       324,
+     "stddev":     67,
+     "unit": "us",
+      "0%":       142,
+     "50%":       316,
+     "66%":       327,
+     "75%":       334,
+     "80%":       338,
+     "90%":       349,
+     "95%":       362,
+     "98%":       413,
+     "99%":       487,
+    "100%":      1689
+  }
+}
+ok 3 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - tests skipped due to the "benchmark" testing mode
+ok 4 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - no_error_log - tests skipped due to the "benchmark" testing mode
+1..4
+ok
+All tests successful.
+Files=1, Tests=4, 13 wallclock secs ( 0.01 usr  0.01 sys +  1.99 cusr 11.13 csys = 13.14 CPU)
+Result: PASS
+===== ROUND 3 =====
+t/100-benchmark.t TEST 1: baseline 204 without the access hook
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/baseline
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 172194,
+  "kBps_per_sec": 19505,
+  "secs_elapsed": 5.807397,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998975
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995125,
+    "bytes_headers":    115995125,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1025,
+     "avg":        88,
+     "stddev":    179,
+     "unit": "us",
+      "0%":        20,
+     "50%":        51,
+     "66%":        58,
+     "75%":        64,
+     "80%":        68,
+     "90%":        78,
+     "95%":       241,
+     "98%":       879,
+     "99%":      1167,
+    "100%":      1537
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       286,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        40,
+     "50%":       285,
+     "66%":       290,
+     "75%":       294,
+     "80%":       296,
+     "90%":       304,
+     "95%":       313,
+     "98%":       328,
+     "99%":       345,
+    "100%":       845
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       286,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        40,
+     "50%":       285,
+     "66%":       290,
+     "75%":       294,
+     "80%":       296,
+     "90%":       305,
+     "95%":       313,
+     "98%":       328,
+     "99%":       345,
+    "100%":       845
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       286,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        40,
+     "50%":       285,
+     "66%":       290,
+     "75%":       294,
+     "80%":       296,
+     "90%":       305,
+     "95%":       313,
+     "98%":       328,
+     "99%":       345,
+    "100%":      1762
+  }
+}
+t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/protected
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 159269,
+  "kBps_per_sec": 18041,
+  "secs_elapsed": 6.278665,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998976
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995130,
+    "bytes_headers":    115995130,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1024,
+     "avg":        83,
+     "stddev":    176,
+     "unit": "us",
+      "0%":        20,
+     "50%":        46,
+     "66%":        52,
+     "75%":        57,
+     "80%":        60,
+     "90%":        73,
+     "95%":       160,
+     "98%":       824,
+     "99%":      1111,
+    "100%":      1453
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       310,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        38,
+     "50%":       308,
+     "66%":       313,
+     "75%":       316,
+     "80%":       319,
+     "90%":       327,
+     "95%":       337,
+     "98%":       353,
+     "99%":       372,
+    "100%":      1647
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       310,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        38,
+     "50%":       308,
+     "66%":       313,
+     "75%":       316,
+     "80%":       319,
+     "90%":       327,
+     "95%":       337,
+     "98%":       353,
+     "99%":       372,
+    "100%":      1647
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       310,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        38,
+     "50%":       308,
+     "66%":       313,
+     "75%":       316,
+     "80%":       319,
+     "90%":       327,
+     "95%":       337,
+     "98%":       353,
+     "99%":       372,
+    "100%":      1695
+  }
+}
+t/100-benchmark.t .. 
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 169406,
+  "kBps_per_sec": 19185,
+  "secs_elapsed": 0.118059,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       758,
+     "stddev":    322,
+     "unit": "us",
+      "0%":       275,
+     "50%":       693,
+     "66%":       916,
+     "75%":      1034,
+     "80%":      1086,
+     "90%":      1206,
+     "95%":      1245,
+     "98%":      1314,
+     "99%":      1314,
+    "100%":      1381
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       286,
+     "stddev":     24,
+     "unit": "us",
+      "0%":       163,
+     "50%":       284,
+     "66%":       290,
+     "75%":       294,
+     "80%":       297,
+     "90%":       307,
+     "95%":       317,
+     "98%":       342,
+     "99%":       369,
+    "100%":       651
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       286,
+     "stddev":     24,
+     "unit": "us",
+      "0%":       163,
+     "50%":       285,
+     "66%":       290,
+     "75%":       294,
+     "80%":       297,
+     "90%":       307,
+     "95%":       317,
+     "98%":       342,
+     "99%":       369,
+    "100%":       651
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       288,
+     "stddev":     47,
+     "unit": "us",
+      "0%":       163,
+     "50%":       285,
+     "66%":       290,
+     "75%":       294,
+     "80%":       297,
+     "90%":       307,
+     "95%":       318,
+     "98%":       346,
+     "99%":       383,
+    "100%":      1616
+  }
+}
+ok 1 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - tests skipped due to the "benchmark" testing mode
+ok 2 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - no_error_log - tests skipped due to the "benchmark" testing mode
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 151047,
+  "kBps_per_sec": 17106,
+  "secs_elapsed": 0.132409,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       701,
+     "stddev":    275,
+     "unit": "us",
+      "0%":       240,
+     "50%":       693,
+     "66%":       839,
+     "75%":       915,
+     "80%":       966,
+     "90%":      1045,
+     "95%":      1083,
+     "98%":      1191,
+     "99%":      1191,
+    "100%":      1225
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       323,
+     "stddev":     36,
+     "unit": "us",
+      "0%":       203,
+     "50%":       318,
+     "66%":       329,
+     "75%":       334,
+     "80%":       337,
+     "90%":       346,
+     "95%":       356,
+     "98%":       379,
+     "99%":       431,
+    "100%":       977
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       323,
+     "stddev":     36,
+     "unit": "us",
+      "0%":       203,
+     "50%":       318,
+     "66%":       329,
+     "75%":       334,
+     "80%":       337,
+     "90%":       346,
+     "95%":       356,
+     "98%":       379,
+     "99%":       431,
+    "100%":       977
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       324,
+     "stddev":     61,
+     "unit": "us",
+      "0%":       203,
+     "50%":       318,
+     "66%":       329,
+     "75%":       334,
+     "80%":       337,
+     "90%":       346,
+     "95%":       356,
+     "98%":       380,
+     "99%":       433,
+    "100%":      1534
+  }
+}
+ok 3 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - tests skipped due to the "benchmark" testing mode
+ok 4 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - no_error_log - tests skipped due to the "benchmark" testing mode
+1..4
+ok
+All tests successful.
+Files=1, Tests=4, 14 wallclock secs ( 0.01 usr  0.00 sys +  1.97 cusr 11.13 csys = 13.11 CPU)
+Result: PASS
+===== ROUND 4 =====
+t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/protected
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 160644,
+  "kBps_per_sec": 18197,
+  "secs_elapsed": 6.224932,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998976
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995130,
+    "bytes_headers":    115995130,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1024,
+     "avg":        93,
+     "stddev":    220,
+     "unit": "us",
+      "0%":        23,
+     "50%":        45,
+     "66%":        52,
+     "75%":        57,
+     "80%":        60,
+     "90%":        74,
+     "95%":       174,
+     "98%":      1072,
+     "99%":      1378,
+    "100%":      1686
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       307,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        41,
+     "50%":       305,
+     "66%":       310,
+     "75%":       314,
+     "80%":       316,
+     "90%":       324,
+     "95%":       334,
+     "98%":       349,
+     "99%":       370,
+    "100%":      1388
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       307,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        41,
+     "50%":       305,
+     "66%":       310,
+     "75%":       314,
+     "80%":       316,
+     "90%":       324,
+     "95%":       334,
+     "98%":       349,
+     "99%":       370,
+    "100%":      1388
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       307,
+     "stddev":     24,
+     "unit": "us",
+      "0%":        41,
+     "50%":       305,
+     "66%":       310,
+     "75%":       314,
+     "80%":       316,
+     "90%":       324,
+     "95%":       334,
+     "98%":       349,
+     "99%":       370,
+    "100%":      1911
+  }
+}
+t/100-benchmark.t TEST 1: baseline 204 without the access hook
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/baseline
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 171874,
+  "kBps_per_sec": 19469,
+  "secs_elapsed": 5.818194,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998975
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995125,
+    "bytes_headers":    115995125,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1025,
+     "avg":        99,
+     "stddev":    207,
+     "unit": "us",
+      "0%":        19,
+     "50%":        53,
+     "66%":        60,
+     "75%":        66,
+     "80%":        69,
+     "90%":        83,
+     "95%":       217,
+     "98%":      1099,
+     "99%":      1226,
+    "100%":      1380
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       287,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        55,
+     "50%":       285,
+     "66%":       290,
+     "75%":       294,
+     "80%":       297,
+     "90%":       305,
+     "95%":       314,
+     "98%":       330,
+     "99%":       350,
+    "100%":       947
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       287,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        55,
+     "50%":       285,
+     "66%":       290,
+     "75%":       294,
+     "80%":       297,
+     "90%":       305,
+     "95%":       314,
+     "98%":       330,
+     "99%":       350,
+    "100%":       947
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       287,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        55,
+     "50%":       285,
+     "66%":       290,
+     "75%":       294,
+     "80%":       297,
+     "90%":       305,
+     "95%":       314,
+     "98%":       330,
+     "99%":       350,
+    "100%":      1803
+  }
+}
+t/100-benchmark.t .. 
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 150784,
+  "kBps_per_sec": 17076,
+  "secs_elapsed": 0.132640,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       742,
+     "stddev":    363,
+     "unit": "us",
+      "0%":       212,
+     "50%":       709,
+     "66%":       960,
+     "75%":      1043,
+     "80%":      1110,
+     "90%":      1220,
+     "95%":      1258,
+     "98%":      1323,
+     "99%":      1323,
+    "100%":      1390
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       323,
+     "stddev":     42,
+     "unit": "us",
+      "0%":       213,
+     "50%":       316,
+     "66%":       327,
+     "75%":       334,
+     "80%":       337,
+     "90%":       346,
+     "95%":       358,
+     "98%":       389,
+     "99%":       483,
+    "100%":      1019
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       323,
+     "stddev":     42,
+     "unit": "us",
+      "0%":       213,
+     "50%":       316,
+     "66%":       327,
+     "75%":       334,
+     "80%":       337,
+     "90%":       346,
+     "95%":       358,
+     "98%":       389,
+     "99%":       483,
+    "100%":      1019
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       325,
+     "stddev":     68,
+     "unit": "us",
+      "0%":       213,
+     "50%":       316,
+     "66%":       327,
+     "75%":       334,
+     "80%":       337,
+     "90%":       346,
+     "95%":       358,
+     "98%":       391,
+     "99%":       492,
+    "100%":      1707
+  }
+}
+ok 1 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - tests skipped due to the "benchmark" testing mode
+ok 2 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - no_error_log - tests skipped due to the "benchmark" testing mode
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 164834,
+  "kBps_per_sec": 18667,
+  "secs_elapsed": 0.121334,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       710,
+     "stddev":    312,
+     "unit": "us",
+      "0%":       247,
+     "50%":       652,
+     "66%":       814,
+     "75%":       946,
+     "80%":      1021,
+     "90%":      1180,
+     "95%":      1214,
+     "98%":      1279,
+     "99%":      1279,
+    "100%":      1349
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       295,
+     "stddev":     23,
+     "unit": "us",
+      "0%":       188,
+     "50%":       292,
+     "66%":       301,
+     "75%":       307,
+     "80%":       310,
+     "90%":       320,
+     "95%":       329,
+     "98%":       345,
+     "99%":       368,
+    "100%":       491
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       295,
+     "stddev":     23,
+     "unit": "us",
+      "0%":       188,
+     "50%":       292,
+     "66%":       302,
+     "75%":       307,
+     "80%":       310,
+     "90%":       320,
+     "95%":       329,
+     "98%":       345,
+     "99%":       368,
+    "100%":       491
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       296,
+     "stddev":     45,
+     "unit": "us",
+      "0%":       188,
+     "50%":       292,
+     "66%":       302,
+     "75%":       307,
+     "80%":       311,
+     "90%":       320,
+     "95%":       329,
+     "98%":       347,
+     "99%":       382,
+    "100%":      1575
+  }
+}
+ok 3 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - tests skipped due to the "benchmark" testing mode
+ok 4 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - no_error_log - tests skipped due to the "benchmark" testing mode
+1..4
+ok
+All tests successful.
+Files=1, Tests=4, 13 wallclock secs ( 0.02 usr  0.00 sys +  1.91 cusr 11.14 csys = 13.07 CPU)
+Result: PASS
+===== ROUND 5 =====
+t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/protected
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 158647,
+  "kBps_per_sec": 17970,
+  "secs_elapsed": 6.303284,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998976
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995130,
+    "bytes_headers":    115995130,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1024,
+     "avg":        83,
+     "stddev":    201,
+     "unit": "us",
+      "0%":        18,
+     "50%":        41,
+     "66%":        47,
+     "75%":        51,
+     "80%":        55,
+     "90%":        65,
+     "95%":       168,
+     "98%":       953,
+     "99%":      1253,
+    "100%":      1584
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       311,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        20,
+     "50%":       309,
+     "66%":       314,
+     "75%":       318,
+     "80%":       320,
+     "90%":       330,
+     "95%":       339,
+     "98%":       355,
+     "99%":       376,
+    "100%":      2039
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       311,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        20,
+     "50%":       309,
+     "66%":       314,
+     "75%":       318,
+     "80%":       321,
+     "90%":       330,
+     "95%":       340,
+     "98%":       355,
+     "99%":       376,
+    "100%":      2039
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       311,
+     "stddev":     25,
+     "unit": "us",
+      "0%":        20,
+     "50%":       309,
+     "66%":       314,
+     "75%":       318,
+     "80%":       321,
+     "90%":       330,
+     "95%":       340,
+     "98%":       355,
+     "99%":       376,
+    "100%":      2100
+  }
+}
+t/100-benchmark.t TEST 1: baseline 204 without the access hook
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/baseline
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 171485,
+  "kBps_per_sec": 19425,
+  "secs_elapsed": 5.831387,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998975
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995125,
+    "bytes_headers":    115995125,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1025,
+     "avg":        90,
+     "stddev":    212,
+     "unit": "us",
+      "0%":        22,
+     "50%":        46,
+     "66%":        51,
+     "75%":        56,
+     "80%":        61,
+     "90%":        75,
+     "95%":       214,
+     "98%":      1050,
+     "99%":      1335,
+    "100%":      1648
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       287,
+     "stddev":     21,
+     "unit": "us",
+      "0%":        57,
+     "50%":       286,
+     "66%":       291,
+     "75%":       295,
+     "80%":       298,
+     "90%":       306,
+     "95%":       315,
+     "98%":       329,
+     "99%":       348,
+    "100%":       972
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       288,
+     "stddev":     21,
+     "unit": "us",
+      "0%":        57,
+     "50%":       286,
+     "66%":       291,
+     "75%":       295,
+     "80%":       298,
+     "90%":       306,
+     "95%":       315,
+     "98%":       329,
+     "99%":       348,
+    "100%":       972
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       288,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        57,
+     "50%":       286,
+     "66%":       291,
+     "75%":       295,
+     "80%":       298,
+     "90%":       306,
+     "95%":       315,
+     "98%":       329,
+     "99%":       348,
+    "100%":      1871
+  }
+}
+t/100-benchmark.t .. 
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 151517,
+  "kBps_per_sec": 17159,
+  "secs_elapsed": 0.131998,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       871,
+     "stddev":    411,
+     "unit": "us",
+      "0%":       263,
+     "50%":       843,
+     "66%":      1104,
+     "75%":      1232,
+     "80%":      1294,
+     "90%":      1420,
+     "95%":      1455,
+     "98%":      1524,
+     "99%":      1524,
+    "100%":      1596
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       321,
+     "stddev":     39,
+     "unit": "us",
+      "0%":       129,
+     "50%":       315,
+     "66%":       326,
+     "75%":       332,
+     "80%":       336,
+     "90%":       345,
+     "95%":       358,
+     "98%":       391,
+     "99%":       479,
+    "100%":       916
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       321,
+     "stddev":     39,
+     "unit": "us",
+      "0%":       129,
+     "50%":       315,
+     "66%":       326,
+     "75%":       332,
+     "80%":       336,
+     "90%":       345,
+     "95%":       358,
+     "98%":       391,
+     "99%":       479,
+    "100%":       916
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       323,
+     "stddev":     71,
+     "unit": "us",
+      "0%":       129,
+     "50%":       315,
+     "66%":       326,
+     "75%":       332,
+     "80%":       336,
+     "90%":       346,
+     "95%":       358,
+     "98%":       392,
+     "99%":       489,
+    "100%":      1866
+  }
+}
+ok 1 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - tests skipped due to the "benchmark" testing mode
+ok 2 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - no_error_log - tests skipped due to the "benchmark" testing mode
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 162506,
+  "kBps_per_sec": 18403,
+  "secs_elapsed": 0.123072,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       772,
+     "stddev":    356,
+     "unit": "us",
+      "0%":       251,
+     "50%":       685,
+     "66%":       942,
+     "75%":      1070,
+     "80%":      1143,
+     "90%":      1277,
+     "95%":      1320,
+     "98%":      1385,
+     "99%":      1385,
+    "100%":      1454
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       299,
+     "stddev":     31,
+     "unit": "us",
+      "0%":       164,
+     "50%":       294,
+     "66%":       305,
+     "75%":       311,
+     "80%":       315,
+     "90%":       327,
+     "95%":       340,
+     "98%":       379,
+     "99%":       428,
+    "100%":       733
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       299,
+     "stddev":     31,
+     "unit": "us",
+      "0%":       164,
+     "50%":       294,
+     "66%":       305,
+     "75%":       311,
+     "80%":       315,
+     "90%":       327,
+     "95%":       340,
+     "98%":       379,
+     "99%":       428,
+    "100%":       733
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       301,
+     "stddev":     53,
+     "unit": "us",
+      "0%":       164,
+     "50%":       294,
+     "66%":       305,
+     "75%":       311,
+     "80%":       315,
+     "90%":       327,
+     "95%":       341,
+     "98%":       387,
+     "99%":       436,
+    "100%":      1687
+  }
+}
+ok 3 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - tests skipped due to the "benchmark" testing mode
+ok 4 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - no_error_log - tests skipped due to the "benchmark" testing mode
+1..4
+ok
+All tests successful.
+Files=1, Tests=4, 14 wallclock secs ( 0.02 usr  0.00 sys +  2.12 cusr 11.05 csys = 13.19 CPU)
+Result: PASS
+===== ROUND 6 =====
+t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/protected
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 159460,
+  "kBps_per_sec": 18063,
+  "secs_elapsed": 6.271151,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998976
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995130,
+    "bytes_headers":    115995130,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1024,
+     "avg":        91,
+     "stddev":    218,
+     "unit": "us",
+      "0%":        18,
+     "50%":        44,
+     "66%":        51,
+     "75%":        56,
+     "80%":        60,
+     "90%":        71,
+     "95%":       185,
+     "98%":      1060,
+     "99%":      1339,
+    "100%":      1662
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       309,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        56,
+     "50%":       307,
+     "66%":       312,
+     "75%":       316,
+     "80%":       319,
+     "90%":       328,
+     "95%":       338,
+     "98%":       354,
+     "99%":       376,
+    "100%":      1771
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       310,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        56,
+     "50%":       307,
+     "66%":       312,
+     "75%":       316,
+     "80%":       319,
+     "90%":       328,
+     "95%":       338,
+     "98%":       354,
+     "99%":       376,
+    "100%":      1771
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       310,
+     "stddev":     25,
+     "unit": "us",
+      "0%":        56,
+     "50%":       307,
+     "66%":       312,
+     "75%":       316,
+     "80%":       319,
+     "90%":       328,
+     "95%":       338,
+     "98%":       354,
+     "99%":       376,
+    "100%":      1883
+  }
+}
+t/100-benchmark.t TEST 1: baseline 204 without the access hook
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/baseline
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 170679,
+  "kBps_per_sec": 19333,
+  "secs_elapsed": 5.858924,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998975
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995125,
+    "bytes_headers":    115995125,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1025,
+     "avg":        89,
+     "stddev":    206,
+     "unit": "us",
+      "0%":        20,
+     "50%":        45,
+     "66%":        52,
+     "75%":        56,
+     "80%":        60,
+     "90%":        73,
+     "95%":       184,
+     "98%":      1027,
+     "99%":      1310,
+    "100%":      1596
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       289,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        29,
+     "50%":       287,
+     "66%":       292,
+     "75%":       296,
+     "80%":       299,
+     "90%":       308,
+     "95%":       317,
+     "98%":       333,
+     "99%":       353,
+    "100%":      1022
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       289,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        29,
+     "50%":       287,
+     "66%":       292,
+     "75%":       296,
+     "80%":       299,
+     "90%":       308,
+     "95%":       317,
+     "98%":       333,
+     "99%":       353,
+    "100%":      1022
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       289,
+     "stddev":     24,
+     "unit": "us",
+      "0%":        29,
+     "50%":       287,
+     "66%":       292,
+     "75%":       296,
+     "80%":       299,
+     "90%":       308,
+     "95%":       317,
+     "98%":       333,
+     "99%":       353,
+    "100%":      1836
+  }
+}
+t/100-benchmark.t .. 
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 151419,
+  "kBps_per_sec": 17148,
+  "secs_elapsed": 0.132083,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       799,
+     "stddev":    408,
+     "unit": "us",
+      "0%":       240,
+     "50%":       723,
+     "66%":       983,
+     "75%":      1112,
+     "80%":      1210,
+     "90%":      1369,
+     "95%":      1468,
+     "98%":      1534,
+     "99%":      1534,
+    "100%":      1604
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       321,
+     "stddev":     36,
+     "unit": "us",
+      "0%":       245,
+     "50%":       314,
+     "66%":       327,
+     "75%":       333,
+     "80%":       336,
+     "90%":       346,
+     "95%":       358,
+     "98%":       377,
+     "99%":       409,
+    "100%":       954
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       321,
+     "stddev":     36,
+     "unit": "us",
+      "0%":       245,
+     "50%":       315,
+     "66%":       327,
+     "75%":       333,
+     "80%":       336,
+     "90%":       346,
+     "95%":       358,
+     "98%":       377,
+     "99%":       409,
+    "100%":       954
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       323,
+     "stddev":     67,
+     "unit": "us",
+      "0%":       245,
+     "50%":       315,
+     "66%":       327,
+     "75%":       333,
+     "80%":       336,
+     "90%":       346,
+     "95%":       358,
+     "98%":       377,
+     "99%":       409,
+    "100%":      1871
+  }
+}
+ok 1 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - tests skipped due to the "benchmark" testing mode
+ok 2 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - no_error_log - tests skipped due to the "benchmark" testing mode
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 161175,
+  "kBps_per_sec": 18253,
+  "secs_elapsed": 0.124088,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       740,
+     "stddev":    351,
+     "unit": "us",
+      "0%":       255,
+     "50%":       636,
+     "66%":       894,
+     "75%":      1015,
+     "80%":      1084,
+     "90%":      1258,
+     "95%":      1313,
+     "98%":      1381,
+     "99%":      1381,
+    "100%":      1454
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       301,
+     "stddev":     26,
+     "unit": "us",
+      "0%":       196,
+     "50%":       299,
+     "66%":       308,
+     "75%":       314,
+     "80%":       317,
+     "90%":       325,
+     "95%":       337,
+     "98%":       359,
+     "99%":       384,
+    "100%":       759
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       301,
+     "stddev":     26,
+     "unit": "us",
+      "0%":       196,
+     "50%":       299,
+     "66%":       309,
+     "75%":       314,
+     "80%":       317,
+     "90%":       326,
+     "95%":       337,
+     "98%":       359,
+     "99%":       384,
+    "100%":       759
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       303,
+     "stddev":     48,
+     "unit": "us",
+      "0%":       196,
+     "50%":       299,
+     "66%":       309,
+     "75%":       314,
+     "80%":       317,
+     "90%":       326,
+     "95%":       338,
+     "98%":       362,
+     "99%":       399,
+    "100%":      1685
+  }
+}
+ok 3 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - tests skipped due to the "benchmark" testing mode
+ok 4 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - no_error_log - tests skipped due to the "benchmark" testing mode
+1..4
+ok
+All tests successful.
+Files=1, Tests=4, 13 wallclock secs ( 0.02 usr  0.00 sys +  1.94 cusr 11.24 csys = 13.20 CPU)
+Result: PASS
+===== ROUND 7 =====
+t/100-benchmark.t TEST 1: baseline 204 without the access hook
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/baseline
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 171282,
+  "kBps_per_sec": 19402,
+  "secs_elapsed": 5.838292,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998976
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995130,
+    "bytes_headers":    115995130,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1024,
+     "avg":        86,
+     "stddev":    176,
+     "unit": "us",
+      "0%":        19,
+     "50%":        47,
+     "66%":        54,
+     "75%":        58,
+     "80%":        62,
+     "90%":        77,
+     "95%":       183,
+     "98%":       874,
+     "99%":      1043,
+    "100%":      1412
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       288,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        40,
+     "50%":       286,
+     "66%":       291,
+     "75%":       295,
+     "80%":       298,
+     "90%":       307,
+     "95%":       316,
+     "98%":       332,
+     "99%":       352,
+    "100%":      1144
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       288,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        40,
+     "50%":       286,
+     "66%":       291,
+     "75%":       295,
+     "80%":       298,
+     "90%":       307,
+     "95%":       316,
+     "98%":       332,
+     "99%":       352,
+    "100%":      1144
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       288,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        40,
+     "50%":       286,
+     "66%":       291,
+     "75%":       295,
+     "80%":       298,
+     "90%":       307,
+     "95%":       316,
+     "98%":       332,
+     "99%":       353,
+    "100%":      1645
+  }
+}
+t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/protected
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 159409,
+  "kBps_per_sec": 18057,
+  "secs_elapsed": 6.273136,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998976
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995130,
+    "bytes_headers":    115995130,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1024,
+     "avg":        90,
+     "stddev":    206,
+     "unit": "us",
+      "0%":        21,
+     "50%":        46,
+     "66%":        53,
+     "75%":        58,
+     "80%":        61,
+     "90%":        77,
+     "95%":       145,
+     "98%":       988,
+     "99%":      1279,
+    "100%":      1589
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       310,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        23,
+     "50%":       307,
+     "66%":       312,
+     "75%":       316,
+     "80%":       319,
+     "90%":       328,
+     "95%":       338,
+     "98%":       355,
+     "99%":       378,
+    "100%":      1703
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       310,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        23,
+     "50%":       307,
+     "66%":       312,
+     "75%":       316,
+     "80%":       319,
+     "90%":       328,
+     "95%":       338,
+     "98%":       355,
+     "99%":       378,
+    "100%":      1703
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       310,
+     "stddev":     24,
+     "unit": "us",
+      "0%":        23,
+     "50%":       307,
+     "66%":       312,
+     "75%":       316,
+     "80%":       319,
+     "90%":       328,
+     "95%":       338,
+     "98%":       356,
+     "99%":       378,
+    "100%":      1802
+  }
+}
+t/100-benchmark.t .. 
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 164085,
+  "kBps_per_sec": 18582,
+  "secs_elapsed": 0.121888,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       881,
+     "stddev":    423,
+     "unit": "us",
+      "0%":       249,
+     "50%":       852,
+     "66%":      1110,
+     "75%":      1255,
+     "80%":      1328,
+     "90%":      1444,
+     "95%":      1490,
+     "98%":      1555,
+     "99%":      1555,
+    "100%":      1623
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       295,
+     "stddev":     31,
+     "unit": "us",
+      "0%":       143,
+     "50%":       290,
+     "66%":       299,
+     "75%":       305,
+     "80%":       309,
+     "90%":       320,
+     "95%":       333,
+     "98%":       361,
+     "99%":       418,
+    "100%":       759
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       295,
+     "stddev":     31,
+     "unit": "us",
+      "0%":       143,
+     "50%":       290,
+     "66%":       299,
+     "75%":       305,
+     "80%":       309,
+     "90%":       320,
+     "95%":       333,
+     "98%":       361,
+     "99%":       418,
+    "100%":       759
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       298,
+     "stddev":     58,
+     "unit": "us",
+      "0%":       143,
+     "50%":       290,
+     "66%":       299,
+     "75%":       305,
+     "80%":       309,
+     "90%":       321,
+     "95%":       334,
+     "98%":       365,
+     "99%":       450,
+    "100%":      1850
+  }
+}
+ok 1 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - tests skipped due to the "benchmark" testing mode
+ok 2 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - no_error_log - tests skipped due to the "benchmark" testing mode
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 149993,
+  "kBps_per_sec": 16986,
+  "secs_elapsed": 0.133339,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       732,
+     "stddev":    356,
+     "unit": "us",
+      "0%":       245,
+     "50%":       627,
+     "66%":       871,
+     "75%":      1000,
+     "80%":      1105,
+     "90%":      1255,
+     "95%":      1290,
+     "98%":      1388,
+     "99%":      1388,
+    "100%":      1455
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       324,
+     "stddev":     39,
+     "unit": "us",
+      "0%":       157,
+     "50%":       319,
+     "66%":       331,
+     "75%":       336,
+     "80%":       340,
+     "90%":       350,
+     "95%":       362,
+     "98%":       384,
+     "99%":       451,
+    "100%":       977
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       324,
+     "stddev":     39,
+     "unit": "us",
+      "0%":       157,
+     "50%":       320,
+     "66%":       331,
+     "75%":       336,
+     "80%":       340,
+     "90%":       350,
+     "95%":       362,
+     "98%":       384,
+     "99%":       451,
+    "100%":       977
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       326,
+     "stddev":     64,
+     "unit": "us",
+      "0%":       157,
+     "50%":       320,
+     "66%":       331,
+     "75%":       336,
+     "80%":       340,
+     "90%":       350,
+     "95%":       362,
+     "98%":       386,
+     "99%":       457,
+    "100%":      1716
+  }
+}
+ok 3 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - tests skipped due to the "benchmark" testing mode
+ok 4 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - no_error_log - tests skipped due to the "benchmark" testing mode
+1..4
+ok
+All tests successful.
+Files=1, Tests=4, 14 wallclock secs ( 0.01 usr  0.01 sys +  1.95 cusr 11.20 csys = 13.17 CPU)
+Result: PASS
+===== ROUND 8 =====
+t/100-benchmark.t TEST 1: baseline 204 without the access hook
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/baseline
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 170918,
+  "kBps_per_sec": 19361,
+  "secs_elapsed": 5.850726,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998975
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995125,
+    "bytes_headers":    115995125,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1025,
+     "avg":        91,
+     "stddev":    210,
+     "unit": "us",
+      "0%":        21,
+     "50%":        45,
+     "66%":        52,
+     "75%":        57,
+     "80%":        61,
+     "90%":        74,
+     "95%":       260,
+     "98%":      1049,
+     "99%":      1313,
+    "100%":      1577
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       288,
+     "stddev":     21,
+     "unit": "us",
+      "0%":        39,
+     "50%":       287,
+     "66%":       292,
+     "75%":       296,
+     "80%":       298,
+     "90%":       307,
+     "95%":       316,
+     "98%":       330,
+     "99%":       349,
+    "100%":       971
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       288,
+     "stddev":     21,
+     "unit": "us",
+      "0%":        39,
+     "50%":       287,
+     "66%":       292,
+     "75%":       296,
+     "80%":       298,
+     "90%":       307,
+     "95%":       316,
+     "98%":       330,
+     "99%":       349,
+    "100%":       971
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       289,
+     "stddev":     23,
+     "unit": "us",
+      "0%":        39,
+     "50%":       287,
+     "66%":       292,
+     "75%":       296,
+     "80%":       298,
+     "90%":       307,
+     "95%":       316,
+     "98%":       330,
+     "99%":       349,
+    "100%":      1895
+  }
+}
+t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss
+Warming up with 20000 requests...
+weighttp -c50 -k -n1000000 http://127.0.0.1:1984/protected
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 1000000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 161131,
+  "kBps_per_sec": 18252,
+  "secs_elapsed": 6.206126,
+  "request_counts": {
+    "started":    1000000,
+    "retired":    1000000,
+    "keep-alive": 998976
+  },
+  "response_counts": {
+    "pass": 1000000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  1000000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":      115995130,
+    "bytes_headers":    115995130,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":      1024,
+     "avg":        95,
+     "stddev":    227,
+     "unit": "us",
+      "0%":        19,
+     "50%":        46,
+     "66%":        53,
+     "75%":        58,
+     "80%":        62,
+     "90%":        73,
+     "95%":       167,
+     "98%":      1125,
+     "99%":      1374,
+    "100%":      1652
+  },
+  "time_to_first_byte": {
+     "num":   1000000,
+     "avg":       306,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        45,
+     "50%":       305,
+     "66%":       309,
+     "75%":       313,
+     "80%":       315,
+     "90%":       323,
+     "95%":       332,
+     "98%":       348,
+     "99%":       368,
+    "100%":      1313
+  },
+  "response_times": {
+     "num":   1000000,
+     "avg":       306,
+     "stddev":     22,
+     "unit": "us",
+      "0%":        45,
+     "50%":       305,
+     "66%":       309,
+     "75%":       313,
+     "80%":       315,
+     "90%":       323,
+     "95%":       332,
+     "98%":       348,
+     "99%":       368,
+    "100%":      1313
+  },
+  "total_times": {
+     "num":   1000000,
+     "avg":       306,
+     "stddev":     24,
+     "unit": "us",
+      "0%":        45,
+     "50%":       305,
+     "66%":       309,
+     "75%":       313,
+     "80%":       315,
+     "90%":       323,
+     "95%":       332,
+     "98%":       348,
+     "99%":       368,
+    "100%":      1961
+  }
+}
+t/100-benchmark.t .. 
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 162773,
+  "kBps_per_sec": 18434,
+  "secs_elapsed": 0.122870,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       940,
+     "stddev":    404,
+     "unit": "us",
+      "0%":       260,
+     "50%":       975,
+     "66%":      1157,
+     "75%":      1286,
+     "80%":      1342,
+     "90%":      1436,
+     "95%":      1492,
+     "98%":      1557,
+     "99%":      1557,
+    "100%":      1623
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       298,
+     "stddev":     28,
+     "unit": "us",
+      "0%":       161,
+     "50%":       293,
+     "66%":       303,
+     "75%":       310,
+     "80%":       314,
+     "90%":       323,
+     "95%":       337,
+     "98%":       355,
+     "99%":       397,
+    "100%":       736
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       298,
+     "stddev":     28,
+     "unit": "us",
+      "0%":       161,
+     "50%":       293,
+     "66%":       304,
+     "75%":       310,
+     "80%":       314,
+     "90%":       323,
+     "95%":       337,
+     "98%":       356,
+     "99%":       397,
+    "100%":       736
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       300,
+     "stddev":     59,
+     "unit": "us",
+      "0%":       161,
+     "50%":       293,
+     "66%":       304,
+     "75%":       310,
+     "80%":       314,
+     "90%":       323,
+     "95%":       337,
+     "98%":       358,
+     "99%":       406,
+    "100%":      1863
+  }
+}
+ok 1 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - tests skipped due to the "benchmark" testing mode
+ok 2 # skip t/100-benchmark.t TEST 1: baseline 204 without the access hook - no_error_log - tests skipped due to the "benchmark" testing mode
+
+weighttp 0.5 - lightweight and simple webserver benchmarking tool
+
+spawning thread #1: 50 concurrent requests, 20000 total requests
+starting benchmark...
+progress:  10% done
+progress:  20% done
+progress:  30% done
+progress:  40% done
+progress:  50% done
+progress:  60% done
+progress:  70% done
+progress:  80% done
+progress:  90% done
+progress: 100% done
+{
+  "reqs_per_sec": 150971,
+  "kBps_per_sec": 17097,
+  "secs_elapsed": 0.132475,
+  "request_counts": {
+    "started":    20000,
+    "retired":    20000,
+    "keep-alive": 19950
+  },
+  "response_counts": {
+    "pass": 20000,
+    "fail": 0,
+    "errs": 0
+  },
+  "status_codes": {
+    "2xx":  20000,
+    "3xx":  0,
+    "4xx":  0,
+    "5xx":  0
+  },
+  "traffic": {
+    "bytes_total":        2320000,
+    "bytes_headers":      2320000,
+    "bytes_body":               0
+  },
+  "connect_times": {
+     "num":        50,
+     "avg":       716,
+     "stddev":    336,
+     "unit": "us",
+      "0%":       235,
+     "50%":       615,
+     "66%":       879,
+     "75%":      1005,
+     "80%":      1068,
+     "90%":      1182,
+     "95%":      1217,
+     "98%":      1304,
+     "99%":      1304,
+    "100%":      1373
+  },
+  "time_to_first_byte": {
+     "num":     20000,
+     "avg":       322,
+     "stddev":     37,
+     "unit": "us",
+      "0%":       213,
+     "50%":       317,
+     "66%":       328,
+     "75%":       334,
+     "80%":       337,
+     "90%":       346,
+     "95%":       354,
+     "98%":       371,
+     "99%":       467,
+    "100%":       936
+  },
+  "response_times": {
+     "num":     20000,
+     "avg":       322,
+     "stddev":     37,
+     "unit": "us",
+      "0%":       213,
+     "50%":       317,
+     "66%":       328,
+     "75%":       334,
+     "80%":       337,
+     "90%":       346,
+     "95%":       354,
+     "98%":       371,
+     "99%":       467,
+    "100%":       936
+  },
+  "total_times": {
+     "num":     20000,
+     "avg":       324,
+     "stddev":     63,
+     "unit": "us",
+      "0%":       213,
+     "50%":       317,
+     "66%":       328,
+     "75%":       334,
+     "80%":       337,
+     "90%":       346,
+     "95%":       354,
+     "98%":       372,
+     "99%":       470,
+    "100%":      1641
+  }
+}
+ok 3 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - tests skipped due to the "benchmark" testing mode
+ok 4 # skip t/100-benchmark.t TEST 2: protected 204 with an exact IPv4 miss - no_error_log - tests skipped due to the "benchmark" testing mode
+1..4
+ok
+All tests successful.
+Files=1, Tests=4, 13 wallclock secs ( 0.02 usr  0.00 sys +  2.08 cusr 11.00 csys = 13.10 CPU)
+Result: PASS

@@ -3,7 +3,8 @@
 上游[30 天 IPv4 名单](https://github.com/borestad/blocklist-abuseipdb/blob/main/abuseipdb-s100-30d.ipv4)
 在 2026-09-15 的本地快照中有 **151,253 条去重 IPv4**，构建后为
 **605,076 字节** `IPBLV001` 文件。[snapshot.json](snapshot.json)记录原始源、
-二进制及地址段的 SHA-256；该快照用于已有的本地功能和压力测试。
+二进制及地址段的 SHA-256；该快照用于 Windows 历史测试和当前 Linux
+Test::Nginx/Valgrind 测试。
 
 仓库包含完整的 `snapshot.bin` 和公开校验摘要 `snapshot.json`。上游仓库注明
 数据来自 AbuseIPDB，但未标出允许下游再分发的许可证；项目 MIT 许可证不覆盖

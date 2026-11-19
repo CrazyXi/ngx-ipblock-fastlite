@@ -2,22 +2,20 @@ local ffi = require "ffi"
 local bit = require "bit"
 local sha256 = require "resty.sha256"
 
-local _M = { _VERSION = "1.3.4" }
+local _M = { _VERSION = "1.4.0" }
 local MAGIC = "IPBLV001"
 local FORMAT_VERSION = 1
 local HEADER_SIZE = 64
 local DEFAULT_MAX_IPS = 2000000
 local READ_WORDS = 16384 -- 64 KiB; divisible by four.
 local PREFIX_COUNT = 65536 -- Top 16 bits: 256 KiB + 4 bytes; +240 KiB versus /12.
-local PREFIX_SHIFT = 16
 local PREFIX_DIVISOR = 65536
 
 -- IMPORTANT: init() MUST run in init_by_lua*, before workers fork. Calling it
 -- from init_worker_by_lua* would allocate/verify one independent array per worker
 -- and defeat copy-on-write sharing. init() rejects the wrong ngx_lua phase.
 -- Keep these references at module scope so the read-only array survives GC.
-local addresses
-local address_count = 0
+local suffixes
 local prefix_offsets
 local metadata
 local sites = {}
@@ -178,8 +176,11 @@ local function load_binary(path, max_ips)
     if not hasher then
         return fail("cannot initialize SHA-256")
     end
-    local array = ffi.new("uint32_t[?]", count)
+    local array = ffi.new("uint16_t[?]", count)
+    local offsets = ffi.new("uint32_t[?]", PREFIX_COUNT + 1)
+    local next_prefix = 0
     local native_le = ffi.abi("le")
+    local buffer = native_le and ffi.new("uint32_t[?]", math.min(count, READ_WORDS))
     local index = 0
     local previous
     while index < count do
@@ -194,27 +195,37 @@ local function load_binary(path, max_ips)
         if native_le then
             -- Copy bytes into the aligned FFI array before reading uint32s.
             -- Casting a Lua string directly to uint32_t* may be unaligned.
-            ffi.copy(array + index, chunk, words * 4)
+            ffi.copy(buffer, chunk, words * 4)
         end
         for word = 0, words - 1 do
             local value
             if native_le then
-                value = tonumber(array[index])
+                value = tonumber(buffer[word])
             else
                 value = u32le(chunk, word * 4 + 1)
-                array[index] = value
             end
             if previous ~= nil and value <= previous then
                 return fail("addresses are not strictly increasing at index " .. tostring(index))
             end
+            local prefix = math.floor(value / PREFIX_DIVISOR)
+            while next_prefix <= prefix do
+                offsets[next_prefix] = index
+                next_prefix = next_prefix + 1
+            end
+            array[index] = bit.band(value, 65535)
             previous = value
             index = index + 1
         end
+        chunk = nil
+        collectgarbage("step", 128)
     end
     file:close()
     local actual_digest = hasher:final()
     if not actual_digest or actual_digest ~= header:sub(33, 64) then
         return nil, "address data SHA-256 mismatch"
+    end
+    for prefix = next_prefix, PREFIX_COUNT do
+        offsets[prefix] = count
     end
     local built_at = u64le(header, 25)
     return array, {
@@ -224,20 +235,69 @@ local function load_binary(path, max_ips)
         built_at_unix = built_at,
         data_sha256 = hex(actual_digest),
         path = path,
-    }
+    }, offsets
 end
 
-local function build_prefix_offsets(array, count)
-    local offsets = ffi.new("uint32_t[?]", PREFIX_COUNT + 1)
-    local index = 0
-    for prefix = 0, PREFIX_COUNT - 1 do
-        offsets[prefix] = index
-        while index < count and bit.rshift(tonumber(array[index]), PREFIX_SHIFT) == prefix do
-            index = index + 1
+local lookup_value
+
+-- Compile once in the master. Only install a combined matcher when rules exist.
+local function compile_cidrs(rules, exact_lookup)
+    if rules == nil then return exact_lookup, 0 end
+    if type(rules) ~= "table" then error("cidrs must be an array") end
+    local ranges = {}
+    local count = 0
+    for i, raw in pairs(rules) do
+        if type(i) ~= "number" or i < 1 or i ~= math.floor(i) then
+            error("cidrs must be an array")
+        end
+        local ip, bits
+        if type(raw) == "string" then ip, bits = raw:match("^([^/]+)/(%d%d?)$") end
+        local first = parse_ipv4(ip)
+        local prefix = tonumber(bits)
+        if not first or not prefix or prefix > 32 or tostring(prefix) ~= bits then
+            error("invalid IPv4 CIDR at index " .. i .. ": " .. tostring(raw))
+        end
+        local size = 2 ^ (32 - prefix)
+        if first % size ~= 0 then error("CIDR has host bits set: " .. raw) end
+        ranges[i] = {first, first + size - 1}
+        count = count + 1
+    end
+    if count == 0 then return exact_lookup, 0 end
+    for i = 1, count do
+        if not ranges[i] then error("cidrs must be a dense array") end
+    end
+    table.sort(ranges, function(a, b) return a[1] < b[1] end)
+    local merged = 0
+    for i = 1, count do
+        local current = ranges[i]
+        local last = ranges[merged]
+        if last and current[1] <= last[2] + 1 then
+            last[2] = math.max(last[2], current[2])
+        else
+            merged = merged + 1
+            ranges[merged] = current
         end
     end
-    offsets[PREFIX_COUNT] = count
-    return offsets
+    local bounds = ffi.new("uint32_t[?]", merged * 2)
+    for i = 1, merged do
+        bounds[i * 2 - 2] = ranges[i][1]
+        bounds[i * 2 - 1] = ranges[i][2]
+    end
+    return function(target)
+        if exact_lookup(target) then return true end
+        local low, high = 0, merged - 1
+        while low <= high do
+            local mid = math.floor((low + high) / 2)
+            if target < bounds[mid * 2] then
+                high = mid - 1
+            elseif target > bounds[mid * 2 + 1] then
+                low = mid + 1
+            else
+                return true
+            end
+        end
+        return false
+    end, merged
 end
 
 function _M.init(options)
@@ -251,7 +311,7 @@ function _M.init(options)
     if type(options.path) ~= "string" or options.path == "" then
         error("ip_blacklist path is required")
     end
-    local array, result = load_binary(options.path, options.max_ips or DEFAULT_MAX_IPS)
+    local array, result, offsets = load_binary(options.path, options.max_ips or DEFAULT_MAX_IPS)
     if not array then
         error("ip_blacklist load failed: " .. tostring(result))
     end
@@ -259,12 +319,13 @@ function _M.init(options)
     for host, config in pairs(options.sites or {}) do
         compiled_sites[string.lower(host)] = normalize_site(config)
     end
-    addresses = array
-    address_count = result.count
-    prefix_offsets = build_prefix_offsets(array, result.count)
+    suffixes = array
+    prefix_offsets = offsets
     metadata = result
     sites = compiled_sites
     default_site = normalize_site(options.default_site)
+    lookup_value, metadata.cidr_ranges = compile_cidrs(options.cidrs, lookup_value)
+    compile_cidrs = nil
     initialized = true
     ngx.log(ngx.NOTICE, "ip_blacklist loaded version=", result.version,
         " count=", result.count, " built_at_unix=", result.built_at_unix,
@@ -273,26 +334,26 @@ function _M.init(options)
     -- them before workers settle so they do not inflate the steady Lua heap.
     sha256 = nil
     load_binary = nil
-    build_prefix_offsets = nil
     normalize_site = nil
     compile_whitelist = nil
     collectgarbage("collect")
     return true
 end
 
-local function lookup_value(target)
+lookup_value = function(target)
     -- Keep prefix division; midpoint shifts were benchmarked independently.
     local prefix = math.floor(target / PREFIX_DIVISOR)
     local low = tonumber(prefix_offsets[prefix])
     local high = tonumber(prefix_offsets[prefix + 1]) - 1
+    local suffix = bit.band(target, 65535)
     while low <= high do
         -- A /16 bucket has at most 65536 distinct addresses. Shift the bounded
         -- distance, not low + high, so large absolute offsets cannot wrap.
         local middle = low + bit.rshift(high - low, 1)
-        local current = addresses[middle]
-        if current < target then
+        local current = suffixes[middle]
+        if current < suffix then
             low = middle + 1
-        elseif current > target then
+        elseif current > suffix then
             high = middle - 1
         else
             return true
@@ -432,6 +493,7 @@ function _M.status()
     return {
         initialized = true,
         module_version = _M._VERSION,
+        cidr_ranges = metadata.cidr_ranges,
         format = metadata.format,
         format_version = metadata.version,
         count = metadata.count,

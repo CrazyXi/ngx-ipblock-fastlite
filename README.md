@@ -1,47 +1,52 @@
 # NGX IPBlock FastLite
 
-[English](README.en.md) · [格式](FORMAT.zh-CN.md) · [运维](docs/OPERATIONS.zh-CN.md) · [测试](docs/TESTING.zh-CN.md)
+面向带 `ngx_http_lua_module` 的 Nginx/OpenResty 的精确 IPv4 黑名单模块。
+名单由 Go 工具离线生成，在 worker 创建前一次性载入内存；请求阶段不读文件，
+命中后，Nginx 默认以 **444** 关闭连接。
+
+[English](README.en.md) · [格式](FORMAT.zh-CN.md) · [运维](docs/OPERATIONS.zh-CN.md) · [测试](docs/TESTING.zh-CN.md) · [Linux 基准](docs/BENCHMARK.zh-CN.md)
 
 ## 功能特点
 
-- 精确匹配 IPv4，命中后由 Nginx 返回 **444** 并断开连接。
-- Go 工具将文本名单转换为排序二进制；加载时校验文件长度、顺序和 SHA-256。
-- 地址存入紧凑的 FFI `uint32_t` 数组，先用 IPv4 高 16 位定位索引桶，再在桶内
-  二分查找，避免扫描整份名单。
-- 名单在 `init_by_lua*` 阶段加载一次；在支持 pre-fork/COW 的环境中由 worker
-  共享只读内存。请求期间不读文件，不访问数据库、Redis 或远程接口。
-- 支持全局启停、按域名配置、精确 IP 白名单、可选 CF 请求头校验以及限速采样日志。
+- 精确 IPv4 名单在磁盘上每条占 4 字节；载入后按地址高 16 位分桶，只保存低 16 位后缀（每条 2 字节）。另有约 256 KiB 的前缀索引，查询只在对应桶内做二分查找。
+- 可选 IPv4 网段封禁（`cidrs`）：启动时合并重叠或相邻的网段。未配置网段时只查精确名单；配置后仅在精确名单未命中时查网段。
+- 在 `init_by_lua*` 阶段加载；pre-fork worker 可通过 COW 共享只读名单。
+- 加载时校验文件格式、长度、地址顺序和地址数据的 SHA-256。校验失败会终止本次初始化。
+- 支持全局或按域名启停、精确 IP 白名单、命中日志及可选的 CF 头部一致性检查。
 
-## 环境要求
+## 支持范围
 
-- Nginx 需要 `ngx_http_lua_module`、LuaJIT/FFI 和 `resty.sha256`。
-- Go 1.22+ 只用于生成名单，Nginx 运行时不需要 Go。
-- 已在 Windows x64 OpenResty 1.25.3.2 本地验证；其他版本待验证。
-- 当前只支持单个 IPv4 地址，不支持 CIDR 和 IPv6。
+- 需要 `ngx_http_lua_module`、LuaJIT/FFI 和 `resty.sha256`；推荐直接使用 OpenResty。
+- 已测试：Windows x64 OpenResty 1.25.3.2、Debian 12 x86_64 OpenResty 1.31.1.1。
+- Go 1.22+ 仅用于生成名单，Nginx 运行时不需要 Go。
+- 精确名单每行一个 IPv4，构建和加载默认上限均为 **200 万个去重地址**。IPv4 网段通过可选的 `cidrs` 配置添加。IPv6 和任意起止地址范围暂不支持。
+- 只处理 HTTP 请求，不处理 `stream {}` 中的 TCP/UDP 流量。
 
 ## 性能横评
 
-**测试机：** Intel Core Ultra 5 225；WSL 2 / Debian 12（内核 6.18.33.2），10 个逻辑 CPU，WSL 可见总内存约 15.32 GiB。OpenResty 1.31.8.1：单 worker 绑定 CPU 0，返回 HTTP 204 的后端绑定 CPU 2。wrk 4.1.0：2 个线程绑定 CPU 3、4，使用 32 个长连接，经本机回环接口压测。
+**测试机：** Intel Core Ultra 5 225；WSL 2 / Debian 12（内核 6.18.33.2），10 个逻辑 CPU，WSL 可见总内存约 15.32 GiB。OpenResty 1.31.8.1：单 worker 绑定 CPU 0，返回 HTTP 204 的后端绑定 CPU 2。Go 压测客户端绑定 CPU 3、4，32 并发，每次尝试新建一条 TCP 连接，只访问本机回环接口。
 
-每格依次为 **放行吞吐 · 总内存占用 · 程序 + IP 库体积**。体积不含 OpenResty 或 APISIX 宿主；0 B 表示未安装拦截组件。
+负载为 **90% 非名单来源 + 10% 名单来源**。每格依次为 **混合尝试次数/秒 · 总内存占用 · 程序 + IP 库体积**。体积不含 OpenResty 或 APISIX 宿主；0 B 表示未安装拦截组件。
 
-| 方案 | 15 万 IP<br>放行吞吐 · 总内存占用 · 程序 + IP 库体积 | 40 万 IP<br>放行吞吐 · 总内存占用 · 程序 + IP 库体积 | 60 万 IP<br>放行吞吐 · 总内存占用 · 程序 + IP 库体积 |
+**IP 库来源：** [borestad/blocklist-abuseipdb](https://github.com/borestad/blocklist-abuseipdb)。15 万、40 万、60 万档分别从[同一固定版本](https://github.com/borestad/blocklist-abuseipdb/tree/eb4a4a4ec7b2453b176cec0e7da0e0fb3033121c)的 30 天、180 天、365 天 IPv4 名单中抽样；每档的所有方案使用相同地址。
+
+| 方案 | 15 万 IP<br>混合尝试/秒 · 总内存占用 · 程序 + IP 库体积 | 40 万 IP<br>混合尝试/秒 · 总内存占用 · 程序 + IP 库体积 | 60 万 IP<br>混合尝试/秒 · 总内存占用 · 程序 + IP 库体积 |
 |---|---|---|---|
-| 原生 OpenResty（无 IP 拦截） | 156,829 req/s · 8.89 MiB · 0 B | 154,831 req/s · 8.75 MiB · 0 B | 155,865 req/s · 8.90 MiB · 0 B |
-| ngx-ipblock-fastlite | 143,473 req/s · 11.38 MiB · 0.59 MiB | 147,814 req/s ¹ · 12.61 MiB ¹ · 1.54 MiB | 145,726 req/s · 13.50 MiB · 2.31 MiB |
-| NGINX geo | 139,767 req/s · 125.21 MiB · 2.46 MiB | 138,480 req/s ¹ · 265.22 MiB ¹ · 6.56 MiB | 136,059 req/s · 296.40 MiB · 9.88 MiB |
-| lua-resty-ipmatcher | 138,616 req/s · 31.07 MiB · 2.04 MiB | 136,827 req/s · 56.60 MiB · 5.43 MiB | 137,113 req/s · 80.70 MiB · 8.17 MiB |
-| iptables + ipset | 156,281 req/s ² · 12.30 MiB · 6.62 MiB | 157,846 req/s ² · 18.81 MiB · 12.86 MiB | 157,931 req/s ² · 22.82 MiB · 17.89 MiB |
-| APISIX ip-restriction | 65,271 req/s · 132.92 MiB · 2.47 MiB | 63,415 req/s · 245.73 MiB · 6.57 MiB | 61,564 req/s · 384.49 MiB · 9.88 MiB |
-| APISIX（未启用 IP 拦截） | 68,512 req/s ¹ · 43.86 MiB ¹ · 0 B | 69,649 req/s · 44.04 MiB · 0 B | 68,480 req/s · 43.24 MiB · 0 B |
+| 原生 OpenResty（无 IP 拦截） | 70,180 次/秒 · 8.84 MiB · 0 B | 73,724 次/秒 · 8.94 MiB · 0 B | 72,939 次/秒 · 9.00 MiB · 0 B |
+| ngx-ipblock-fastlite | 72,170 次/秒 · 11.51 MiB · 0.59 MiB | 66,972 次/秒 · 12.72 MiB · 1.54 MiB | 72,600 次/秒 · 13.54 MiB · 2.31 MiB |
+| NGINX geo | 74,016 次/秒 · 86.96 MiB · 2.46 MiB | 72,917 次/秒 · 211.69 MiB · 6.56 MiB | 71,640 次/秒 · 295.57 MiB · 9.88 MiB |
+| lua-resty-ipmatcher | 64,460 次/秒 · 30.95 MiB · 2.04 MiB | 67,297 次/秒 · 54.63 MiB · 5.43 MiB | 65,113 次/秒 · 86.82 MiB · 8.17 MiB |
+| iptables + ipset | 1,572 次/秒 · 12.76 MiB · 6.62 MiB | 1,575 次/秒 · 19.14 MiB · 12.86 MiB | 1,574 次/秒 · 22.95 MiB · 17.89 MiB |
+| APISIX ip-restriction | 45,624 次/秒 · 132.98 MiB · 2.47 MiB | 47,321 次/秒 · 247.61 MiB · 6.57 MiB | 47,648 次/秒 · 385.24 MiB · 9.88 MiB |
+| APISIX（未启用 IP 拦截） | 48,181 次/秒 · 44.93 MiB · 0 B | 51,294 次/秒 · 44.04 MiB · 0 B | 47,706 次/秒 · 43.19 MiB · 0 B |
 
-¹ 为波动后的复测值。² 为 ipset 独立配对复测吞吐，三档均未观察到稳定的放行吞吐差异。内存包含热态前端进程和独立内核名单集合。项目行是低 16 位地址后缀优化版（Lua 文件 SHA-256 前缀 `617e818eb705`）的实测，不代表其他版本或线上流量。[测试方法与原始记录](docs/WSL-OPTIMIZED.zh-CN.md)。
+速率包含已核验的放行和拦截。无规则对照全部返回 204；启用拦截时，每轮必须恰好放行 90%、拦截 10%，无异常才纳入。项目命中以 444 断连，其余 HTTP 方案返回 403。ipset 的 DROP 不回复客户端：**32 并发、200 ms 连接超时决定了约 1,600 次/秒的客户端上限，不是内核丢包能力。** 内存为热态前端 PSS 加内核名单集合。[测试方法与逐轮记录](docs/WSL-OPTIMIZED.zh-CN.md)。
 
-## 安装
+## 安装使用
 
 ### 1. 生成名单
 
-准备非空 TXT 文件，每行一个 IPv4 地址。允许空行和注释；错误地址会停止构建。
+TXT 文件每行一个 IPv4；允许空行和注释。空名单或非法地址会导致构建失败。
 
 ```sh
 go build -o ipblacklist-builder ./cmd/ipblacklist-builder
@@ -51,91 +56,128 @@ go build -o ipblacklist-builder ./cmd/ipblacklist-builder
 
 ### 2. 部署文件
 
-将下列文件放到服务器：
+Nginx 运行时只需要两个文件：
 
-| 必需文件 | 服务器路径 |
+| 仓库文件 | 示例部署路径 |
 |---|---|
 | `lua/ip_blacklist.lua` | `/opt/ngx-ipblock-fastlite/lua/ip_blacklist.lua` |
 | 生成的 `candidate.bin` | `/opt/ngx-ipblock-fastlite/current.bin` |
 
-`/opt/ngx-ipblock-fastlite` 是示例路径，可以改为其他 Nginx 可读目录。
-
 ```sh
 sudo install -d -m 0755 /opt/ngx-ipblock-fastlite/lua
-sudo install -m 0644 candidate.bin /opt/ngx-ipblock-fastlite/current.bin
 sudo install -m 0644 lua/ip_blacklist.lua /opt/ngx-ipblock-fastlite/lua/ip_blacklist.lua
+sudo install -m 0644 candidate.bin /opt/ngx-ipblock-fastlite/current.bin
 ```
 
-Nginx 运行时只需要上面两个文件：
+`/opt/ngx-ipblock-fastlite` 只是推荐示例，可改成任意 Nginx 可读目录。
+`ipblacklist-builder` 和 `conf/nginx-integration.conf.example` 都不是运行时必需文件。
 
-- `ipblacklist-builder` 只用于生成或更新 `current.bin`，不用上传；只有计划让
-  服务器自动更新名单时，才另外安装 Linux 版本。
-- `conf/nginx-integration.conf.example` 只是参考，不用上传；从中选择需要的
-  配置，合并到现有 `nginx.conf`。
-- Windows 构建工具名为 `ipblacklist-builder.exe`，不能作为 Linux 程序使用。
+### 3. 接入 Nginx
 
-### 3. 配置 Nginx
-
-把下面两部分加入现有 `http {}`：`init()` 加载名单，`access()` 检查请求。
-两者都必须配置。宝塔环境的主配置通常是
-`/www/server/nginx/conf/nginx.conf`，请以 `nginx -T` 显示的实际配置为准。
+下面配置放在现有 `http {}` 中。`init()` 负责加载名单，`access()` 才负责逐请求
+查询，两者缺一不可。
 
 ```nginx
-# 在 http {} 中，合并到现有 init_by_lua*：
 lua_package_path "/opt/ngx-ipblock-fastlite/lua/?.lua;;";
+
 init_by_lua_block {
     require("ip_blacklist").init({
         path = "/opt/ngx-ipblock-fastlite/current.bin",
+        -- 可选：所有启用站点共用的 IPv4 网段。
+        -- cidrs = { "192.0.2.0/24", "198.51.100.128/25" },
         default_site = {
-            enabled = true,            -- 启用黑名单，与 Cloudflare 无关。
-            require_cf_header = false, -- 默认值：直接使用 Nginx 的 $remote_addr。
+            enabled = true,
+            require_cf_header = false,
         },
 
-        -- 可选：只在需要严格校验 CF 请求头的域名上启用。
+        -- 可选：按域名使用独立配置。站点项不会继承 default_site，
+        -- 因此必须显式保留 enabled = true。
         -- sites = {
         --     ["www.example.cn"] = {
         --         enabled = true,
-        --         require_cf_header = true,
+        --         require_cf_header = false,
         --     },
         -- },
     })
 }
 
-# 必需：把黑名单查询接入每个请求的访问阶段。
 access_by_lua_block {
     require("ip_blacklist").access()
 }
 ```
 
-如果 `server` 或 `location` 已有 `access_by_lua*`（例如 WAF），请将
-`require("ip_blacklist").access()` 加入原有代码，不要重复定义同层钩子。
+网段写在 `init()` 的顶层，使用网络地址和 `/0` 至 `/32` 的前缀长度。
+例如 `192.0.2.0/24` 覆盖 `192.0.2.0` 至 `192.0.2.255`，写成
+`192.0.2.1/24` 会使初始化失败。`/0` 覆盖全部 IPv4。站点白名单优先。
+修改配置后 reload 即生效，已有精确名单二进制可继续使用。未配置网段或
+`cidrs = {}` 时，请求沿用原查询函数。
 
-`enabled = true` 只表示启用黑名单，不是 CF 开关。`require_cf_header` 默认是
-`false`，模块直接检查 Nginx 的 `$remote_addr`：直连站点无需 CF 配置；使用
-Cloudflare 且 Nginx 已正确恢复真实 IP 时也无需改成 `true`。
+这里的 `?` 是 Lua 模块名占位符；`require("ip_blacklist")` 会定位到
+`ip_blacklist.lua`，不是任意文件匹配。路径末尾的 `;;` 保留 Lua 默认搜索路径。
 
-`require_cf_header = true` 是可选的严格校验：它要求 `CF-Connecting-IP` 存在，
-并与 Real IP 模块恢复后的 `$remote_addr` 一致，否则返回 403。只有需要这层
-校验时才按域名开启。如果 Nginx 已有 Real IP 配置，不要重复引入
-[可选网段文件](conf/cloudflare-realip.conf)。完整配置见[示例](conf/nginx-integration.conf.example)。
+`init_by_lua*` 表示这一组指令（通常使用 `_block` 或 `_file` 形式），不是配置文件名。
+`init()` 必须在 `init_by_lua*` 执行，不能放进 `init_worker_by_lua*`。
 
-reload 前先运行 `nginx -t`，再验证正常 IP 和名单 IP（444）。更新与回滚见
-[运维说明](docs/OPERATIONS.zh-CN.md)。
+同一层级已有 Lua/WAF 配置时不要再定义第二个同类指令：
 
-## 验证案例
+- 已有 `lua_package_path`：把本项目路径追加到原字符串中，不能重复声明指令。
+- 已有 `init_by_lua_file`：把 `require(...).init(...)` 加入原初始化 Lua 文件。
+- 已有 `access_by_lua_file` 或 `access_by_lua_block`：把 `.access()` 加入原访问钩子。
+- `server` 或 `location` 自己定义了 `access_by_lua*` 时，会覆盖从 `http` 继承的
+  钩子；这些位置也必须合并 `.access()`，否则对应请求不会检查黑名单。
 
-[151,253 条 IPv4 验证案例](examples/abuseipdb-30d/README.zh-CN.md)记录了
-2026-09-15 本地使用的 **151,253 条精确 IPv4**，仓库包含对应的
-`snapshot.bin` 和校验摘要。案例也说明如何获取当前名单并自行构建。
+完整合并参考：[conf/nginx-integration.conf.example](conf/nginx-integration.conf.example)。
+宝塔等面板环境请先用 `nginx -T` 确认实际生效的配置和 Lua 文件，不要仅按目录名猜测。
 
-本地测试中，地址数组与索引合计约 **847 KiB**；完整测试路径相对无钩子路径
-的吞吐差异中位数为 **2.90%**。这些数字仅代表本地 Windows 测试，不能直接
-推算线上性能。详情见[性能记录](docs/PERFORMANCE.zh-CN.md)。
+## Cloudflare（可选）
 
-## 注意事项
+不用 Cloudflare 时，不需要任何 CF 配置，保持 `require_cf_header = false` 即可。
 
-- 只能在 `init_by_lua*` 加载，不能放到 `init_worker_by_lua*`；模块会拒绝
-  worker 阶段初始化。空名单会被拒绝，更新失败保留旧名单；停用请显式关闭站点。
-- IPv6 不命中这份 IPv4 名单。Cloudflare 缓存命中不回源。
-- 代码和文档使用 [MIT 许可证](LICENSE)；MIT 许可证不覆盖第三方名单，
-  使用或再分发前需自行确认上游授权。
+使用 Cloudflare 时，应先用 Nginx Real IP 模块和可信 `set_real_ip_from` 网段正确
+恢复 `$remote_addr`；若已有 Real IP 配置，不要重复引入网段文件。
+[cloudflare-realip.conf](conf/cloudflare-realip.conf) 仅为可选参考，并非必需文件。
+
+`require_cf_header = true` 只会检查 `CF-Connecting-IP` 是否存在并与
+`$remote_addr` 一致；失败时默认返回 403。它不能单独证明连接来自 Cloudflare，
+也不能替代可信代理网段或源站访问控制。
+
+## 命中日志（可选）
+
+命中日志默认关闭，在 `default_site` 或相应 `sites` 项中配置：
+
+| 参数 | 默认值 | 作用 |
+|---|---:|---|
+| `log_hits` | `false` | 命中日志总开关 |
+| `log_sample_rate` | `0` | `0` 关闭采样，`0.01` 表示约 1%；设为 `1` 时所有命中均可记录，实际条数仍受每秒上限约束 |
+| `log_rate_per_second` | `10` | 每个 worker 每秒上限；`0` 禁止记录 |
+
+只有 `log_hits = true`、采样比例大于 0、限速大于 0 时才会写日志。日志使用
+`ngx.WARN`，进入当前 Nginx `error_log`；日志级别需为 `warn` 或更详细。
+这些参数只控制日志，不影响 444 拦截。生产环境建议采样并限速。
+
+## 验证与更新
+
+```sh
+nginx -t
+nginx -s reload
+```
+
+reload 后至少验证：正常 IP 放行、名单 IP 在到达业务前被 444 断开、现有 WAF/
+鉴权仍执行。444 不返回 HTTP 状态行，客户端通常显示空响应或连接被关闭。
+
+更新、原子替换和回滚见[运维说明](docs/OPERATIONS.zh-CN.md)。自动化测试见
+[测试说明](docs/TESTING.zh-CN.md)。
+
+## 151,253 条 IP 示例
+
+仓库包含一个来自 [borestad/blocklist-abuseipdb 的 30 天名单](https://github.com/borestad/blocklist-abuseipdb/blob/main/abuseipdb-s100-30d.ipv4)、含 151,253 条精确 IPv4 的
+[验证快照](examples/abuseipdb-30d/README.zh-CN.md)，二进制大小为 605,076 字节。
+该第三方名单的授权不属于本项目 MIT 许可证，使用或再分发前请确认上游许可。
+
+Windows 历史测试和 Linux Test::Nginx/Valgrind 结果分别见
+[Windows 性能记录](docs/PERFORMANCE.zh-CN.md)与[Linux 基准](docs/BENCHMARK.zh-CN.md)。
+这些结果用于复现和版本比较，不代表 OpenResty 官方认证，也不能直接推算线上性能。
+
+## 许可证
+
+代码和文档使用 [MIT License](LICENSE)。

@@ -23,9 +23,13 @@ engines = ("plain", "fastlite", "geo", "matcher", "ipset", "nft", "apisix-off", 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("work", type=Path)
 parser.add_argument("source", type=Path)
+parser.add_argument("--mixed-client", type=Path, help="90/10 mode: path to built mixedclient; SOURCE_DIR contains SIZE/ips from the pinned run")
+parser.add_argument("--mixed-http-count", type=int, default=128000, help="attempts per HTTP sample (pilot: 12800); ipset always uses 12800")
+parser.add_argument("--skip-ipset", action="store_true", help="reuse separately recorded kernel samples")
 parser.add_argument("--only", action="append", choices=[f"{n}:{key}" for n, _ in sizes for key in engines],
                     help="Repeat a specific size and engine (repeatable)")
 args = parser.parse_args()
+mixed = args.mixed_client.resolve() if args.mixed_client else None
 work = args.work.resolve()
 source = args.source.resolve()
 if os.readlink("/proc/self/ns/net") == os.readlink("/proc/1/ns/net") or os.readlink("/proc/self/ns/mnt") == os.readlink("/proc/1/ns/mnt"):
@@ -112,7 +116,24 @@ plugins:
                      "-g", "daemon off;"], stdout=sys.stderr)
 
 
-def measure(kind, ips, directory):
+def mixed_sample(kind, hit_sources, count):
+    def dropped():
+        listing = run("iptables", "-nvxL", "INPUT")
+        return int(re.search(r"^\s*(\d+)\s+\d+\s+DROP\s+.*match-set blocked src", listing, re.M)[1])
+    before = dropped() if kind == "ipset" else None
+    sample = json.loads(run("taskset", "-c", "3,4", str(mixed), str(count), ",".join(hit_sources)))
+    hit = {"fastlite":"empty_close", "ipset":"connect_timeout", "plain":"204", "apisix-off":"204"}.get(kind, "403")
+    expected = {"miss/204": count * 9 // 10, "listed/"+hit: count // 10}
+    if sample["counts"] != expected:
+        raise RuntimeError(f"incorrect mixed outcomes: {sample}")
+    if before is not None:
+        sample["drop_packets"] = dropped() - before
+        if sample["drop_packets"] != count // 10:
+            raise RuntimeError(f"unexpected DROP count: {sample}")
+    return sample
+
+
+def measure(kind, ips, directory, hit_sources):
     folder = directory / ("case-" + kind)
     folder.mkdir()
     proc = None
@@ -127,7 +148,7 @@ def measure(kind, ips, directory):
             hook = "if ($blocked) { return 403; }"
         if kind == "fastlite":
             extra = f"""lua_package_path "{repo}/lua/?.lua;;"; init_by_lua_block {{
-              require('ip_blacklist').init({{path='{directory}/fixture.bin', default_site={{enabled=true,block_status=403}}}}) }}"""
+              require('ip_blacklist').init({{path='{directory}/fixture.bin', default_site={{enabled=true,block_status={444 if mixed else 403}}}}}) }}"""
             hook = "access_by_lua_block { require('ip_blacklist').access() }"
         if kind == "matcher":
             extra = f"""lua_package_path "{deps}/?.lua;;"; init_by_lua_block {{
@@ -164,6 +185,8 @@ proxy_pass http://backend; }} }} }}""", folder, "0")
             raise RuntimeError("readiness timeout")
         row["activate_s"] = round(time.monotonic() - begin, 3)
         expected = (28, "000") if kernel else (0, "204" if kind in ("plain", "apisix-off") else "403")
+        if mixed and kind == "fastlite":
+            expected = (52, "000")
         for hit in [ips[0], ips[-1]]:
             actual = probe(hit)
             if actual != expected:
@@ -175,10 +198,15 @@ proxy_pass http://backend; }} }} }}""", folder, "0")
         if kind == "nft":
             loaded = json.loads(run("nft", "-j", "list", "set", "ip", "bench", "blocked"))
             assert sum(len(x["set"]["elem"]) for x in loaded["nftables"] if "set" in x) == len(ips)
-        bench(proc.pid)
-        row["samples"] = [bench(proc.pid) for _ in range(3)]
-        if expected == (0, "403"):
-            row["hits"] = [bench(proc.pid, ips[0], True) for _ in range(3)]
+        if mixed:
+            row["warmup"] = mixed_sample(kind, hit_sources, 3200)
+            count = 12800 if kind == "ipset" else args.mixed_http_count
+            row["samples"] = [mixed_sample(kind, hit_sources, count) for _ in range(5)]
+        else:
+            bench(proc.pid)
+            row["samples"] = [bench(proc.pid) for _ in range(3)]
+            if expected == (0, "403"):
+                row["hits"] = [bench(proc.pid, ips[0], True) for _ in range(3)]
         row["pss_kib"] = pss(proc.pid)
         set_bytes = 0
         if kind == "ipset":
@@ -214,40 +242,56 @@ backend = server("worker_processes 1; events {} http { access_log off; server { 
 try:
     for n, days in sizes:
         selected = [key for key in engines if not args.only or f"{n}:{key}" in args.only]
+        if mixed:
+            selected = [key for key in selected if key != "nft" and not (args.skip_ipset and key == "ipset")]
         if not selected:
             continue
         directory = work/str(n)
         directory.mkdir()
-        src = (source/f"{days}d.txt").read_bytes()
-        blob_id = hashlib.sha1(f"blob {len(src)}\0".encode() + src).hexdigest()
-        expected = {30:"fb56657b1d63e09acf0a24df7c3895d5c7079730",
-                    180:"9ee370703650334b19f32a5b5bb9271a645e3fc5",
-                    365:"83a9fca231622a71a6da5a9ac8d191807be39618"}
-        if blob_id != expected[days]:
-            raise ValueError(f"{days}d source differs from upstream eb4a4a4: {blob_id}")
-        rows = (line.partition(b"#")[0].strip() for line in src.splitlines())
-        pool = {ipaddress.IPv4Address(ip.decode()).packed for ip in rows if ip}
-        declared = int(re.search(rb"# Number of ips:\s*(\d+)", src)[1])
-        assert len(pool) == declared and len(pool) >= n
-        subset = sorted(pool, key=lambda ip: (hashlib.sha256(ip).digest(), ip))[:n]
-        values = sorted(int.from_bytes(ip, "big") for ip in subset)
-        payload = struct.pack(f"<{n}I", *values)
-        blob = struct.pack("<8sIIQQ", b"IPBLV001", 1, 64, n, 0) + hashlib.sha256(payload).digest() + payload
-        with (work/"sources.jsonl").open("a") as f:
-            f.write(json.dumps(dict(size=n,days=days,unique=len(pool),source_sha256=hashlib.sha256(src).hexdigest(),
-                                    payload_sha256=hashlib.sha256(payload).hexdigest()))+"\n")
-        del pool, subset, values, src
+        if mixed:
+            ips = (source/str(n)/"ips").read_text().splitlines()
+            values = [int(ipaddress.IPv4Address(ip)) for ip in ips]
+            payload = struct.pack(f"<{n}I", *values)
+            digest = hashlib.sha256(payload).digest()
+            sources = (repo/"benchmark/results/wsl-sources.jsonl").read_text().splitlines()
+            assert digest.hex() == next(r["payload_sha256"] for r in map(json.loads,sources) if r["size"]==n)
+            blob = struct.pack("<8sIIQQ", b"IPBLV001",1,64,n,0) + digest + payload
+        else:
+            src = (source/f"{days}d.txt").read_bytes()
+            blob_id = hashlib.sha1(f"blob {len(src)}\0".encode() + src).hexdigest()
+            expected = {30:"fb56657b1d63e09acf0a24df7c3895d5c7079730",
+                        180:"9ee370703650334b19f32a5b5bb9271a645e3fc5",
+                        365:"83a9fca231622a71a6da5a9ac8d191807be39618"}
+            if blob_id != expected[days]:
+                raise ValueError(f"{days}d source differs from upstream eb4a4a4: {blob_id}")
+            rows = (line.partition(b"#")[0].strip() for line in src.splitlines())
+            pool = {ipaddress.IPv4Address(ip.decode()).packed for ip in rows if ip}
+            declared = int(re.search(rb"# Number of ips:\s*(\d+)", src)[1])
+            assert len(pool) == declared and len(pool) >= n
+            subset = sorted(pool, key=lambda ip: (hashlib.sha256(ip).digest(), ip))[:n]
+            values = sorted(int.from_bytes(ip, "big") for ip in subset)
+            payload = struct.pack(f"<{n}I", *values)
+            blob = struct.pack("<8sIIQQ", b"IPBLV001", 1, 64, n, 0) + hashlib.sha256(payload).digest() + payload
+            with (work/"sources.jsonl").open("a") as f:
+                f.write(json.dumps(dict(size=n,days=days,unique=len(pool),source_sha256=hashlib.sha256(src).hexdigest(),
+                                        payload_sha256=hashlib.sha256(payload).hexdigest()))+"\n")
+            del pool, subset, values, src
         ips = [str(ipaddress.IPv4Address(x)) for x, in struct.iter_unpack("<I", blob[64:])]
         assert len(ips) == n and "127.0.0.1" not in ips
         (directory/"fixture.bin").write_bytes(blob)
         (directory/"ips").write_text("\n".join(ips)+"\n")
         (directory/"geo").write_text("".join(ip+" 1;\n" for ip in ips))
-        for hit in (ips[0], ips[-1]):
+        hit_sources = [ips[(len(ips)-1)*i//15] for i in range(16)] if mixed else [ips[0], ips[-1]]
+        if mixed:
+            assert not set(ips).intersection(f"127.0.0.{i}" for i in range(1,17))
+        for hit in hit_sources:
             run("ip", "addr", "add", hit+"/32", "dev", "lo")
         for kind in selected:
-            measure(kind, ips, directory)
-        for hit in (ips[0], ips[-1]):
+            measure(kind, ips, directory, hit_sources)
+        for hit in hit_sources:
             run("ip", "addr", "del", hit+"/32", "dev", "lo")
 finally:
     backend.terminate()
     backend.wait()
+if any("error" in json.loads(line) for line in (work/"samples.jsonl").read_text().splitlines()):
+    sys.exit("Invalid samples; inspect samples.jsonl before using any results")

@@ -1,6 +1,8 @@
-# 测试 · [English](TESTING.md)
+# 测试说明 · [English](TESTING.md)
 
-从仓库根目录运行：
+## Go 构建与单元测试
+
+在仓库根目录运行：
 
 ```sh
 go test ./...
@@ -10,22 +12,50 @@ go build -o ipblacklist-builder ./cmd/ipblacklist-builder
 ./ipblacklist-builder verify --input fixture.bin --json
 ```
 
-Go 测试覆盖 TXT 注释/BOM/CRLF、严格地址解析、去重、无符号 IPv4 边界、
-二进制格式/摘要/排序损坏、空名单拒绝和 CLI。空或错误源文件不会发布候选；
-测试文件在临时目录生成。
+测试覆盖严格 IPv4 解析、注释/BOM/CRLF、去重、无符号边界、空名单拒绝，
+以及二进制格式、长度、摘要、排序损坏和 CLI 行为。
 
-ngx_lua 集成请使用独立本地监听，检查：
+## OpenResty 集成测试
 
-- 普通 IPv4 进入业务，名单成员在业务前断连 444，名单中的白名单成员放行。
-- 合法 IPv6 跳过本 IPv4 名单。直连站点无需 CF 头仍能正常工作。
-  CF 站点设 `require_cf_header = true` 时，缺失或不匹配的
-  `CF-Connecting-IP` 会被拒绝，不能选择伪造的访客 IP。
-- 模块在 `init_by_lua*` 加载，worker 阶段调用被拒绝；本机诊断接口显示
-  正确条数与地址段 SHA-256。
-- 覆盖每个目标业务 location、原有 WAF/鉴权钩子、内部跳转和 WebSocket 握手。
-- 新版本能新增和移除 IP；更新失败与回滚时保留可用旧名单。
+需要 Test::Nginx、OpenResty 和仓库中的 151,253 条测试快照：
 
-151,253 条 IP 的 Windows 案例已在 OpenResty 1.25.3.2 上验证全部成员、
-边界/随机查询、HTTP 444、压力与内存采样。[记录](PERFORMANCE.zh-CN.md)
-仅代表本地；Linux worker 共享、多 worker reload 和线上代理链应在对应环境
-单独验收，不能拿本机结果承诺线上性能。
+```sh
+export TEST_NGINX_BINARY=/usr/local/openresty/nginx/sbin/nginx
+export TEST_NGINX_IPBLOCK_LUA="$PWD/lua"
+export TEST_NGINX_IPBLOCK_BIN="$PWD/examples/abuseipdb-30d/snapshot.bin"
+
+prove -v t/001-integration.t t/002-cidr.t
+```
+
+该测试验证精确命中、未命中、access 放行和在内容阶段前拒绝。自动化拒绝用
+403 取得可断言的 HTTP 响应；默认 444 会直接关闭连接，应另做端到端验证。
+
+本机 WSL 可用 `sudo unshare -n sh t/wsl-smoke.sh` 直接验证后缀分桶边界、CIDR 合并、白名单优先及真实 444 断连，不依赖 Perl 测试框架。
+
+严格内存检查：
+
+```sh
+TEST_NGINX_USE_VALGRIND=1 \
+TEST_NGINX_VALGRIND_EXIT_ON_FIRST_ERR=1 \
+prove -v t/001-integration.t
+```
+
+`valgrind.suppress` 只屏蔽 Nginx `ngx_set_environment` 的已知进程退出分配，
+不屏蔽本项目调用栈。
+
+Benchmark 的复现命令、原始日志和限制见[Linux 基准](BENCHMARK.zh-CN.md)。
+
+## 部署前验收
+
+- 正常 IPv4 能到达业务；名单 IPv4 在业务前断连 444；白名单成员放行。
+- IPv6 不进入本项目的 IPv4 查询路径。
+- 每个需要保护的 `server`/`location` 都实际执行 `.access()`，包括已有
+  WAF/鉴权、内部跳转和 WebSocket 路径。
+- 若启用 `require_cf_header=true`，验证头部缺失或与 `$remote_addr` 不一致时
+  返回 403；同时验证可信代理网段和源站访问控制，不能把一致性检查当成来源认证。
+- 新名单能新增和移除地址；构建失败、reload 失败和回滚时旧 worker 继续可用。
+- 状态接口只允许本机或管理员访问，并显示预期条数与数据 SHA-256。
+
+Windows OpenResty 1.25.3.2 的历史结果见[本地性能](PERFORMANCE.zh-CN.md)；
+Debian 12/OpenResty 1.31.1.1 的 Test::Nginx、Valgrind 和 PSS 结果见
+[Linux 基准](BENCHMARK.zh-CN.md)。两者都不是线上容量保证。

@@ -1,0 +1,14 @@
+{
+   nginx_set_environment_process_exit
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:ngx_alloc
+   fun:ngx_set_environment
+   obj:*/nginx
+   obj:*/nginx
+   fun:ngx_spawn_process
+   obj:*/nginx
+   fun:ngx_master_process_cycle
+   fun:main
+}

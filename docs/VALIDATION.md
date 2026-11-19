@@ -1,17 +1,30 @@
 # Validation record · [简体中文](VALIDATION.zh-CN.md)
 
-Go `test`/`vet` pass. The builder's strict parser and `IPBLV001` verifier have
-unit and CLI coverage. Linux amd64/arm64 binaries were cross-compiled from
-Go source but not run on the production host; build artifacts are Git-ignored.
+## Current automated validation
 
-The [151k-IP case](../examples/abuseipdb-30d/README.md) was fetched on
-2026-09-15 and used in an isolated Windows x64 OpenResty 1.25.3.2 instance.
-It produced 151,253 unique IPv4s, a 605,076-byte binary, and the payload
-SHA-256 recorded in `snapshot.json`. The final local module v1.3.3 checked
-684,835 member, boundary, adjacent, and random targets, passed HTTP behavior
-tests, and was pressure/memory sampled. [Numbers](PERFORMANCE.md) are not a
-Linux or production capacity claim.
+- `go test ./...`, `go vet ./...`, and builder compilation pass.
+- Unit tests cover strict TXT parsing, deduplication, empty-list rejection, and
+  `IPBLV001` format/digest/order validation.
+- Debian 12 x86_64, OpenResty 1.31.1.1, Test::Nginx 0.32: 11/11 integration
+  assertions pass.
+- Strict Valgrind also passes 11/11 in that Linux environment. Throughput and
+  PSS observations are in the [Linux benchmark](BENCHMARK.md).
 
-Still host-specific: actual hook/location coverage, Linux COW/PSS,
-multi-worker reload, and normal backend latency. If using CF, also verify the
-trusted proxy chain and Pseudo IPv4 settings. Follow [testing](TESTING.md).
+## 151,253-address case
+
+The [validation snapshot](../examples/abuseipdb-30d/README.md) contains 151,253
+unique IPv4 addresses. `snapshot.bin` is 605,076 bytes and `snapshot.json`
+records its data digest.
+
+The same snapshot was previously tested on Windows x64 OpenResty 1.25.3.2 for
+all-member, boundary, adjacent, random, HTTP 444, load, and memory behavior;
+historical numbers are in [Windows performance](PERFORMANCE.md). The current
+Linux tests use this snapshot as well.
+
+## Not a production acceptance test
+
+Public results do not replace validation on the deployment host. Before release,
+verify access-hook coverage, WAF/auth ordering, the real proxy chain,
+reload/rollback, application latency, and false-positive handling. Cloudflare
+deployments must also validate trusted proxy ranges, origin access control, and
+Pseudo IPv4 settings.

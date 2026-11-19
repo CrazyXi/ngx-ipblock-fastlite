@@ -10,6 +10,7 @@
 /uwsgi_temp/
 *.exe
 *.log
+!benchmark/results/*.log
 *.pid
 *.bin
 !examples/abuseipdb-30d/snapshot.bin

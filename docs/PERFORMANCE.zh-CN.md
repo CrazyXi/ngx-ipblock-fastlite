@@ -1,6 +1,9 @@
-# 本地性能 · [English](PERFORMANCE.md)
+# Windows 历史性能 · [English](PERFORMANCE.md)
 
-以下仅为 **Windows 本机**观察：OpenResty 1.25.3.2、一个 worker、32 个 Go 客户端，
+本页保留 v1.3.3 的 **Windows 本机历史数据**。当前 Linux Test::Nginx、
+Valgrind 和 PSS 结果见[Linux 基准](BENCHMARK.zh-CN.md)。
+
+测试环境为 OpenResty 1.25.3.2、一个 worker、32 个 Go 客户端，
 使用[151,253 条 IP 快照](../examples/abuseipdb-30d/README.zh-CN.md)。
 它不是 Linux、其他库或线上站点的测试结果。
 
@@ -20,5 +23,29 @@ CPU 余量、TLS/WAF 和缓存会改变影响，无法据此计算线上下降�
 本地压力后 master+worker 合计约 27.8 MiB Working Set、9.8–10.0 MiB
 Private Bytes。Windows 进程求和不是 Linux 共享内存或 PSS 测量。
 
-最终源码保留三路二分和有界差值右移。已测试的 `lower_bound` 未稳定胜出。
+该版本保留三路二分和有界差值右移。已测试的 `lower_bound` 未稳定胜出。
 原始本地报告仍保留在开发机 Git 忽略的 `localtest/` 中。
+
+## IPv4 CIDR 回归测试（2026-11-19）
+
+Windows OpenResty 1.25.3.2，同一 worker、32 个并发客户端、151,253 条精确地址。
+三个等价的 204 接口轮换处理四个未命中地址。预热后按 ABC、BCA、CAB、CBA、
+BAC、ACB 六种顺序测量，每组每轮 4 秒。C 组额外配置 256 个互不相邻的 /25。
+
+| 轮次 | A 旧版 req/s | B 新版关闭 CIDR | C 新版启用 CIDR |
+|---:|---:|---:|---:|
+| 1 | 59,679 | 59,228 | 58,185 |
+| 2 | 58,616 | 59,435 | 58,498 |
+| 3 | 58,991 | 58,170 | 58,460 |
+| 4 | 59,057 | 58,939 | 58,374 |
+| 5 | 58,798 | 58,996 | 58,052 |
+| 6 | 42,168 | 41,224 | 41,156 |
+
+按轮配对计算，B 相对 A 的吞吐变化中位数为 **−0.48%**，C 相对 B 为
+**−1.27%**。所有请求均得到预期响应。第六轮三组吞吐同时下降，已计入结果。
+该样本测量放行路径，无法证明任意负载下性能完全相同。
+
+独立初始化测试中，每组在同一 Lua VM 内重复加载三次，记录 worker 中 GC 后
+LuaJIT 堆增量的中位数：A **861.7 KiB**、B **862.0 KiB**、C **877.5 KiB**。
+这些是模块加载样本，配置输入已提前创建。CIDR 索引本身每个合并区间占 8 字节，
+256 个区间共 2 KiB。

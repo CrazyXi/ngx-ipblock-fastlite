@@ -5,7 +5,10 @@
 # rejects this wrong phase explicitly.
 # do not paste a second init/access directive over panel, WAF or auth hooks.
 
-# Inside the existing http { } block:
+# Inside the existing http { } block. If lua_package_path already exists,
+# append this directory to that directive's value instead of declaring it twice.
+# "?" is the module-name placeholder, so require("ip_blacklist") resolves
+# /opt/ngx-ipblock-fastlite/lua/ip_blacklist.lua; it is not a free-form wildcard.
 lua_package_path "/opt/ngx-ipblock-fastlite/lua/?.lua;;";
 # If Cloudflare Real IP is already configured in http {}, do not include it again.
 # Direct sites need no Cloudflare Real IP configuration.
@@ -15,19 +18,29 @@ init_by_lua_block {
     require("ip_blacklist").init({
         path = "/opt/ngx-ipblock-fastlite/current.bin",
         max_ips = 2000000,
+        -- Optional IPv4 networks, shared by all enabled sites.
+        -- cidrs = { "192.0.2.0/24" },
         default_site = {
             enabled = true,            -- Enables blocking; unrelated to Cloudflare.
-            require_cf_header = false, -- Default: trust Nginx's $remote_addr.
+            require_cf_header = false, -- Default: use Nginx's $remote_addr.
+
+            -- Optional hit logging. All three conditions must permit logging.
+            -- Messages use WARN and require error_log level warn or more verbose.
+            -- log_hits = true,          -- Default false: master switch.
+            -- log_sample_rate = 0.01,  -- 0..1; 1 samples all hits subject to the rate limit.
+            -- log_rate_per_second = 10,-- Per worker; default 10; 0 disables.
         },
 
-        -- Optional per-host override. A site entry replaces default_site for
-        -- that host, so keep enabled=true when enabling strict CF validation.
+        -- Optional independent per-host configuration. A site entry does not
+        -- inherit default_site, so keep enabled=true and repeat every setting
+        -- that host needs.
         -- sites = {
         --     ["www.example.com"] = {
         --         enabled = true,
         --         -- Small exact-IPv4 exceptions only.
         --         whitelist = { "192.0.2.10" },
-        --         -- Cloudflare site only; omit for direct-origin sites.
+        --         -- Optional CF header/$remote_addr consistency check.
+        --         -- This does not authenticate the connection as Cloudflare.
         --         require_cf_header = true,
         --         fail_closed = true,
         --         block_status = 444,
@@ -41,25 +54,26 @@ init_by_lua_block {
     })
 }
 
-# REQUIRED: init() only loads the data; this hook performs request lookups.
+# REQUIRED for HTTP requests: init() only loads data; this hook performs lookups.
+# It does not inspect TCP/UDP traffic configured under stream {}.
 # At http level it is inherited only where a child context does not define its
 # own access_by_lua*. Merge this call into every existing WAF/auth access hook.
 access_by_lua_block {
     require("ip_blacklist").access()
 }
 
-# Local/admin-only diagnostic endpoint. Its empty access handler prevents the
-# inherited blacklist hook from filtering this health/status request.
-# Put this inside a protected server block and test inheritance in the final config.
-location = /__ip_blacklist_status {
-    allow 127.0.0.1;
-    allow ::1;
-    deny all;
-    access_by_lua_block { }
-    default_type application/json;
-    content_by_lua_block {
-        local cjson = require "cjson.safe"
-        ngx.header["Cache-Control"] = "no-store"
-        ngx.say(cjson.encode(require("ip_blacklist").status()))
-    }
-}
+# Optional local/admin-only diagnostic endpoint. If needed, uncomment this
+# inside an existing server {}. The empty access handler prevents inheritance
+# of the http-level blacklist hook for this local status request.
+# location = /__ip_blacklist_status {
+#     allow 127.0.0.1;
+#     allow ::1;
+#     deny all;
+#     access_by_lua_block { }
+#     default_type application/json;
+#     content_by_lua_block {
+#         local cjson = require "cjson.safe"
+#         ngx.header["Cache-Control"] = "no-store"
+#         ngx.say(cjson.encode(require("ip_blacklist").status()))
+#     }
+# }

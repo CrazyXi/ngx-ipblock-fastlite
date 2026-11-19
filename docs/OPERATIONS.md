@@ -16,23 +16,27 @@ Paths in the example files are placeholders; adjust them to your host.
    performs request checks. Configuring only `.init()` blocks nothing. Merge
    the call into any child WAF/auth access hook that overrides inheritance.
 3. The example enables `default_site`, so every site that actually calls
-   `.access()` is checked. Use optional `sites` entries only for per-host
-   whitelist, CF validation, logging, or enablement overrides. `enabled=true`
+   `.access()` is checked. Use optional `sites` entries for per-host allowlists,
+   CF-header consistency checks, logging, or enablement. Each site entry is an
+   independent complete configuration and does not inherit `default_site`. `enabled=true`
    controls blocking only. `require_cf_header` defaults to `false`, so direct
    sites and CF sites with correctly restored Real IPs both use `$remote_addr`.
-   Set `require_cf_header=true` only for optional strict CF-header validation.
+   Setting `require_cf_header=true` only compares the CF header with
+   `$remote_addr`; it does not authenticate the connection source.
    If Real IP is already configured in `http`, do not
    include the optional [`cloudflare-realip.conf`](../conf/cloudflare-realip.conf)
-   again. Never trust a client-supplied CF header from an untrusted hop.
+   again. Trusted proxy ranges and origin access control remain separate Nginx,
+   network, or firewall responsibilities.
 4. Run `nginx -t` with the actual main config and reload only after it passes.
    Confirm the load notice (count and SHA-256), local-only status endpoint, an
-   allowed IP, a blocked IP (444), and CF header rejection (403) if enabled.
+   allowed IP, a blocked IP (444), and missing/mismatched CF-header rejection
+   (403) if the consistency check is enabled.
 
 `init()` must run before workers start. A worker-phase call is rejected: it
 would repeat file verification and lose pre-worker memory sharing. IPv6 passes
 this IPv4 list. Cloudflare cache hits do not reach the origin. Review static,
 API, upload, download, internal redirect, and existing WAF/auth hook coverage.
-From Lua module v1.3.4, CF header validation runs only when
+The `CF-Connecting-IP`/`$remote_addr` consistency check runs only when
 `require_cf_header=true` is explicitly configured.
 
 With `real_ip_recursive on`, when the peer is in `set_real_ip_from`, Nginx
@@ -58,6 +62,10 @@ the exact version filename from `VERSIONS_DIR`, then verify the status digest
 and request behavior. Restrict the status endpoint to localhost/admin access;
 do not expose a full list or management endpoint publicly.
 
-Enable hit logging only with sampling and a per-worker rate limit. If using CF,
-refresh trusted proxy ranges. Review upstream feed rights and false positives
-before scheduled updates. Local test results are in [performance](PERFORMANCE.md).
+Hit logging requires `log_hits=true`, a `log_sample_rate` greater than `0`, and
+a per-worker `log_rate_per_second` greater than `0`; see the
+[README](../README.en.md) for parameter and Nginx log-level
+details. If using CF, refresh trusted proxy ranges. Review upstream feed rights
+and false positives before scheduled updates. Historical Windows results are in
+[performance](PERFORMANCE.md); current Linux results are in the
+[Linux benchmark](BENCHMARK.md).

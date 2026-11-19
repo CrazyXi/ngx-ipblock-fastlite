@@ -1,21 +1,26 @@
-# 优化版 WSL 横评 · [English](WSL-OPTIMIZED.md)
+# WSL 横评方法：90% 放行、10% 名单来源 · [English](WSL-OPTIMIZED.md)
 
-本机 WSL Debian 12，单 worker、同一 HTTP 204 后端、32 个长连接。六种拦截实现中，nftables 因无法可靠测得其集合内存，不列入横评。原生 OpenResty 和 APISIX 对照不加载名单；ipset 专项对照保留已加载集合，只切换规则。[数据来源与环境](WSL-COMPARISON.zh-CN.md)
+数据表和机器配置见[中文首页](../README.md#性能横评)。三档名单均取自 [borestad/blocklist-abuseipdb 固定版本](https://github.com/borestad/blocklist-abuseipdb/tree/eb4a4a4ec7b2453b176cec0e7da0e0fb3033121c)，运行前校验[各档载荷 SHA-256](../benchmark/results/wsl-sources.jsonl)。
 
-首页横评表每格从左到右：**放行吞吐 · 总内存 · 安装体积（拦截组件 + IP 库，不含 OpenResty）**。
+## 负载与核验
 
-[三档横评表见仓库首页](../README.md#性能横评)。
+客户端仅连接隔离网络空间中的 `127.0.0.1:18080`。32 个并发客户端显式绑定源地址：16 个已确认不在名单的回环地址，及从该档排序名单中等间隔选取的 16 个成员。每个客户端每 10 次尝试恰有一次使用名单源地址。每次新建 TCP 连接，不使用代理 IP 头、不重试；前端连接同一 204 后端。
 
-**总内存** = 热态前端 master 和子进程的 PSS 之和 + 独立内核名单集合。ipset 使用集合自身报告的 `Size in memory`；进程内名单已含在 PSS 中，不再重复相加。这里不是整台 WSL 的内存，也不含共同后端、压测客户端或通用内核开销。nftables 只有虚拟机级内核计数差值，不能可靠归到单个集合，因此从对比表移除。
+非名单尝试必须全部返回 204。名单来源在无拦截对照中也必须返回 204；本项目必须在未收到任何 HTTP 响应字节时读到 EOF（默认 444）；geo、lua-resty-ipmatcher 和 APISIX 插件必须返回 403。ipset 使用 INPUT 链的源地址集合匹配，对命中端口的名单源执行 DROP；仅当连接超时数和该窗口内核 DROP 包增量均等于计划命中数，样本才有效。其他错误不计成拦截。
 
-**安装体积**仅统计组件文件及可加载的名单或规则文件，不计 OpenResty、APISIX 宿主和离线构建工具。geo 已编入宿主，只计规则；ipset 计相关工具、库及规则文件；APISIX 插件计插件文件和带名单的路由配置。对照行的 0 B 表示没有安装拦截组件或名单，不是宿主本身为零。
+每组预热 3,200 次。首轮所有方案各跑 5 × 12,800 次；HTTP 样本较短，因此所有 HTTP 方案另做 5 × 128,000 次，表中统一取长样本。ipset 每个首轮样本已约 8 秒，使用这 5 个样本。每格速率取五个「总尝试数 / 墙钟秒」的中位数，包含正确放行和正确拒绝；不等于成功 HTTP 响应数。内存取同次运行采样后的 master 与子进程 PSS，加上 ipset 自报的集合字节数；不是峰值或整机内存。磁盘值沿用同版本组件与相同名单的[文件体积清单](../benchmark/results/wsl-optimized-footprint.json)，不含宿主。
 
-放行吞吐统计一个固定未命中地址收到的 HTTP 204 响应，不是命中拒绝速率。除 ² 外，吞吐取三个 3 秒样本的中位数。¹ 表示因样本波动而重测（15 万 APISIX 对照，40 万本项目和 geo）。P99、HTTP 403 命中吞吐及首轮数值见原始记录；[默认 444 断连测试](WSL-COMPARISON.zh-CN.md#优化前后对照)另列。
+**比较边界：** DROP 不会回复客户端。32 个槽位、10% 命中、200 ms 连接超时，本身就把 ipset 的混合尝试速率限制在约 `32 / (0.10 × 0.20) = 1,600 次/秒` 以下。这不是内核每秒丢包数上限，也不能据此判断防火墙比 HTTP 方案慢多少。测试不含 TLS、CDN、真实网络延迟或 CIDR；方案依次运行，小差异不作为稳定排名。
 
-**² iptables + ipset：独立配对复测。** 旧记录只在正式压测前读取 DROP 计数，不能核验每个采样窗口经过规则的流量。新测试保持同一代理进程，在独立网络命名空间交替开关规则，每档四对，顺序为 AB / BA / AB / BA。启用时对 18080 端口执行一次源地址集合检查：未命中 ACCEPT，否则 DROP。每次先用绑定源地址的探测验证命中与放行，再预热 1 秒、测 5 秒。所有启用窗口均验证 ACCEPT 包计数增加、DROP 不增加；15 万档首轮的无规则样本跨度超过 15 倍，因此单独完整复测，使用复测而非首轮。表中吞吐来自 wrk 完成的 HTTP 请求，不是包计数。内存沿用原横评实测。
+## 复现
 
-关规则只用于测量启用名单检查对放行吞吐的影响，不是另一种拦截方案。与 ² 匹配的无规则对照（15 / 40 / 60 万）为 155,273 req/s / 157,995 req/s / 157,948 req/s。逐对吞吐差的中位数（最小 … 最大）为 +0.7% (-2.1% … +2.6%) / +0.2% (-1.9% … +1.3%) / +0.4% (-1.2% … +0.5%)。不要将 ² 与首行不同轮次的绝对值相减，也不要把放行请求速率解释为防火墙的丢包能力。
+在 Linux 仓库根目录执行。`lists/{150000,400000,600000}/ips` 是[原横评](WSL-COMPARISON.zh-CN.md)按固定版本生成的三个文件。先创建空的临时父目录；脚本拒绝在宿主网络或挂载空间运行。
 
-## 原始记录
+```sh
+run=$(mktemp -d)
+go build -o "$run/mixedclient" ./benchmark/mixedclient
+sudo unshare -nm --propagation private python3 benchmark/wsl_compare.py "$run/pilot" lists --mixed-client "$run/mixedclient" --mixed-http-count 12800
+sudo unshare -nm --propagation private python3 benchmark/wsl_compare.py "$run/http" lists --mixed-client "$run/mixedclient" --skip-ipset
+```
 
-本轮模块 SHA-256 `617e818eb7056454553a9e401a0f9cbfac7459c39bedb1c6d6a1a85b25fbd414`。 [首轮](../benchmark/results/wsl-optimized-samples.jsonl) · [复测](../benchmark/results/wsl-optimized-repeat.jsonl) · [内存与磁盘原始读数](../benchmark/results/wsl-optimized-footprint.json) · [横评脚本](../benchmark/wsl_compare.py) · [体积测量脚本](../benchmark/wsl_footprint.py) · [ipset 配对样本](../benchmark/results/wsl-ipset-paired.jsonl) · [15 万复测](../benchmark/results/wsl-ipset-paired-repeat.jsonl) · [配对脚本](../benchmark/wsl_ipset_paired.py)
+原始记录：[首轮，含 ipset 计数](../benchmark/results/wsl-mixed-pilot.jsonl) · [HTTP 长样本](../benchmark/results/wsl-mixed-http.jsonl)。此前纯放行数据仍保留在[历史记录](../benchmark/results/wsl-optimized-samples.jsonl)，两种负载不能直接计算优化百分比。
